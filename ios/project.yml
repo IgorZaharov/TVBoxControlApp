@@ -66,6 +66,8 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         CODE_SIGN_STYLE: Automatic
+        # Empty here (automatic signing). The release workflow sets TVBR_APP_PROFILE and signs manually.
+        PROVISIONING_PROFILE_SPECIFIER: $(TVBR_APP_PROFILE)
         ENABLE_PREVIEWS: true
   TVBoxRemoteWidget:
     type: app-extension
@@ -98,6 +100,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.tvboxremote.ios.widget
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
+        # Empty here (automatic signing). The release workflow sets TVBR_WIDGET_PROFILE and signs manually.
+        PROVISIONING_PROFILE_SPECIFIER: $(TVBR_WIDGET_PROFILE)
         SKIP_INSTALL: YES
         APPLICATION_EXTENSION_API_ONLY: YES
   TVBoxRemoteTests:

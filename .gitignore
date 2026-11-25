@@ -32,3 +32,8 @@ ios/build/
 *.keystore
 *.p12
 *.mobileprovision
+*.p8
+*.cer
+*.csr
+*.certSigningRequest
+signing/

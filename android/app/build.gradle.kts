@@ -4,6 +4,10 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// Release signing (docs/RELEASE_SIGNING.md). The release workflow sets these environment variables
+// from GitHub secrets. Without ANDROID_KEYSTORE_FILE the release build is not signed.
+val releaseKeystore: String? = System.getenv("ANDROID_KEYSTORE_FILE")
+
 android {
     // The app language can change inside the app (Preferences), so every bundle install needs all languages.
     bundle {
@@ -19,12 +23,25 @@ android {
         applicationId = "com.tvboxremote.app"
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
+        // The release workflow sets VERSION_CODE to its run number, so each upload to Google Play is higher.
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = "1.0.0"
+    }
+
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
+            if (releaseKeystore != null) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
