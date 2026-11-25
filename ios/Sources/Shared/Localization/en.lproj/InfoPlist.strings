@@ -1,0 +1,4 @@
+/* Info.plist text in English. */
+"CFBundleDisplayName" = "TVBox Remote";
+"NSLocalNetworkUsageDescription" = "TVBox Remote finds and controls the TV boxes on your Wi-Fi network.";
+"NSMotionUsageDescription" = "TVBox Remote uses the gyroscope to move the mouse cursor on the TV.";

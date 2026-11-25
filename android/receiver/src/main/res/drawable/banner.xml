@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path
+        android:fillColor="#0E0F12"
+        android:pathData="M0,0h320v180h-320z" />
+    <!-- TV screen -->
+    <path
+        android:fillColor="#1C1E24"
+        android:pathData="M60,30h200a10,10 0,0 1,10 10v90a10,10 0,0 1,-10 10h-200a10,10 0,0 1,-10 -10v-90a10,10 0,0 1,10 -10z" />
+    <!-- TV stand -->
+    <path
+        android:fillColor="#2A2D35"
+        android:pathData="M130,146h60v6h-60z" />
+    <!-- Cursor arrow -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M145,48L145,100L159,88L168,107L176,103L167,85L184,85Z"
+        android:strokeWidth="3"
+        android:strokeColor="#4F8CFF"
+        android:strokeLineJoin="round" />
+</vector>

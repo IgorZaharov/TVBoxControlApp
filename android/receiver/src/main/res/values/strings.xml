@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TVBox Remote Receiver</string>
+    <string name="accessibility_label">TVBox Remote mouse</string>
+    <string name="accessibility_description">Shows a mouse cursor and taps the screen for the TVBox Remote app on your phone. The service listens only on your local network. A phone must pair with a code that the TV shows. The service does not read the screen content.</string>
+
+    <string name="title">TVBox Remote Receiver</string>
+    <string name="subtitle">Use your phone as a mouse for this TV box.</string>
+    <string name="status_off">Status: off. Turn on the accessibility service.</string>
+    <string name="status_starting">Status: starting.</string>
+    <string name="status_running">Status: on. Address %1$s, port %2$d. Connected phones: %3$d.</string>
+    <string name="status_no_address">no network</string>
+    <string name="paired_count">Paired phones: %1$d</string>
+
+    <string name="open_settings">Open accessibility settings</string>
+    <string name="forget">Forget paired phones</string>
+    <string name="forget_done">The paired phones are removed. Each phone must pair again.</string>
+    <string name="settings_missing">This box has no accessibility settings screen. Use the ADB command below.</string>
+
+    <string name="instructions_title">How to turn on the receiver</string>
+    <string name="instructions">1. Select \"Open accessibility settings\".\n2. Select \"TVBox Remote mouse\" and turn it on.\n3. On the phone, open TVBox Remote and open the mouse screen. The phone finds this box.\n4. The TV shows a 4-digit code. Type the code on the phone.\n\nAndroid 13 and later: if the switch is gray, open Settings, then Apps, then TVBox Remote Receiver. Open the menu of the app info screen and select \"Allow restricted settings\". Then do step 2 again.\n\nIf the box has no accessibility settings, connect a computer with ADB and type:\nadb shell settings put secure enabled_accessibility_services com.tvboxremote.receiver/.CursorAccessibilityService</string>
+    <string name="security_note">Security: the receiver works only on your local network. Its traffic is not encrypted. Use it only on a home network that you trust.</string>
+
+    <string name="pairing_title">Pairing code</string>
+    <string name="pairing_hint">Type this code on %1$s.</string>
+</resources>

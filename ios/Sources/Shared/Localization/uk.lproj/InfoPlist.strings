@@ -1,0 +1,4 @@
+/* Текст Info.plist українською. */
+"CFBundleDisplayName" = "TVBox Remote";
+"NSLocalNetworkUsageDescription" = "TVBox Remote знаходить приставки у вашій мережі Wi-Fi і керує ними.";
+"NSMotionUsageDescription" = "TVBox Remote використовує гіроскоп, щоб рухати курсор миші на телевізорі.";

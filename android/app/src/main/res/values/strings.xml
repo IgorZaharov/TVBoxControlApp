@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The home screen name. The store name, "Tiny TVBox Remote Control", is too long for the launcher. -->
+    <string name="app_name" translatable="false">TVBox Remote</string>
+    <string name="store_name" translatable="false">Tiny TVBox Remote Control</string>
+
+    <!-- Common actions -->
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_add">Add</string>
+    <string name="action_forget">Forget</string>
+    <string name="action_pair">Pair</string>
+    <string name="action_done">Done</string>
+    <string name="action_try_again">Try again</string>
+    <string name="action_reset">Reset</string>
+    <string name="state_expanded">Expanded</string>
+    <string name="state_collapsed">Collapsed</string>
+
+    <!-- Remote screen -->
+    <string name="menu_open">Menu</string>
+    <string name="menu_devices">Devices</string>
+    <string name="menu_media">Media keys</string>
+    <string name="menu_preferences">Preferences</string>
+    <string name="menu_help">Help</string>
+    <string name="menu_about">About</string>
+    <string name="status_not_connected">Not connected</string>
+    <string name="status_tap_to_connect">Tap to connect</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_connected">Connected</string>
+    <string name="transport_wifi">Wi-Fi</string>
+    <string name="transport_bluetooth">Bluetooth</string>
+    <string name="volume_level">Volume %1$d of %2$d</string>
+    <string name="btn_keyboard">Keyboard</string>
+    <string name="btn_mouse">Mouse</string>
+    <string name="btn_controller">Controller</string>
+
+    <!-- Remote keys -->
+    <string name="key_up">Up</string>
+    <string name="key_down">Down</string>
+    <string name="key_left">Left</string>
+    <string name="key_right">Right</string>
+    <string name="key_ok">OK</string>
+    <string name="key_back">Back</string>
+    <string name="key_home">Home</string>
+    <string name="key_settings">Settings</string>
+    <string name="key_power">Power</string>
+    <string name="key_volume_up">Volume up</string>
+    <string name="key_volume_down">Volume down</string>
+    <string name="key_mute">Mute</string>
+    <string name="key_unmute">Unmute</string>
+    <string name="key_enter">Enter</string>
+    <string name="key_delete">Delete</string>
+    <string name="key_menu">Menu</string>
+    <string name="key_search">Search</string>
+    <string name="key_play_pause">Play/Pause</string>
+    <string name="key_next">Next</string>
+    <string name="key_previous">Previous</string>
+    <string name="key_rewind">Rewind</string>
+    <string name="key_fast_forward">Fast forward</string>
+    <string name="key_channel_up">Channel up</string>
+    <string name="key_channel_down">Channel down</string>
+    <string name="key_guide">Guide</string>
+    <string name="key_input">Input</string>
+    <string name="key_all_apps">All apps</string>
+
+    <!-- Devices screen -->
+    <string name="devices_title">Devices</string>
+    <string name="section_wifi">Wi-Fi</string>
+    <string name="section_bluetooth">Bluetooth</string>
+    <string name="devices_wifi_searching">Searching for Android TV and Google TV boxes on this network. The phone and the box must use the same Wi-Fi network.</string>
+    <string name="devices_mouse_ready">%1$s · Mouse ready</string>
+    <string name="devices_add_by_ip">Add by IP address</string>
+    <string name="bt_unavailable">This phone cannot act as a Bluetooth remote. Use Wi-Fi.</string>
+    <string name="bt_allow_hint">Allow Bluetooth to use this phone as a Bluetooth remote, keyboard, mouse and game controller.</string>
+    <string name="bt_allow">Allow Bluetooth</string>
+    <string name="bt_off">Bluetooth is off.</string>
+    <string name="bt_turn_on">Turn on Bluetooth</string>
+    <string name="bt_none_paired">No paired Bluetooth devices yet.</string>
+    <string name="bt_paired">Paired</string>
+    <string name="bt_searching">Searching…</string>
+    <string name="bt_find_nearby">Find nearby</string>
+    <string name="bt_make_visible">Make phone visible</string>
+    <string name="bt_tap_to_pair">Tap to pair</string>
+    <string name="bt_pair_help">To pair: tap \"Make phone visible\". On the box, open Settings, then Remotes &amp; Accessories, then Add accessory, and select this phone. Or tap \"Find nearby\" and select the box.</string>
+    <string name="forget_title">Forget %1$s?</string>
+    <string name="forget_text">The phone deletes the pairing for this box. To use the box again, you must pair it again.</string>
+    <string name="forget_description">Forget %1$s</string>
+    <string name="add_ip_help">Find the IP address on the box: Settings, then Network &amp; Internet, then your network.</string>
+    <string name="add_ip_address">IP address</string>
+    <string name="add_ip_name">Name (optional)</string>
+
+    <!-- Pairing dialogs -->
+    <string name="pair_box_title">Pair with the box</string>
+    <string name="pair_receiver_title">Pair the mouse receiver</string>
+    <string name="pair_box_text">Enter the code shown on your TV.</string>
+    <string name="pair_receiver_text">Enter the 4-digit code shown on your TV.</string>
+    <string name="pair_wrong_code">That code is not correct. Try again.</string>
+    <string name="pair_refused_code">The box refused the code.</string>
+    <string name="pair_refused_config">The box refused the pairing configuration.</string>
+    <string name="pair_failed_status">Pairing failed (status %1$d).</string>
+    <string name="pair_unexpected">Unexpected answer from the box.</string>
+
+    <!-- Keyboard and media sheets -->
+    <string name="keyboard_title">Type on the TV</string>
+    <string name="keyboard_hint">Select a text field on the TV first. Each change goes to the box.</string>
+    <string name="keyboard_placeholder">Text</string>
+    <string name="keyboard_clear">Clear</string>
+    <string name="media_title">Media keys</string>
+
+    <!-- Mouse screen -->
+    <string name="mouse_title">Mouse</string>
+    <string name="mouse_gyro">Gyro</string>
+    <string name="mouse_hint_gyro">Point the phone at the TV and move it.\nTap to click. Drag with two fingers to scroll.</string>
+    <string name="mouse_hint_touch">Drag to move. Tap to click.\nDrag with two fingers to scroll.</string>
+    <string name="mouse_click">Click</string>
+    <string name="mouse_connect_first">Connect to a box first.</string>
+    <string name="mouse_receiver_connecting">Connecting to the mouse receiver…</string>
+    <string name="mouse_enter_code">Enter the code shown on your TV.</string>
+    <string name="mouse_install_receiver">Install TVBox Remote Receiver on your box to use the mouse over Wi-Fi. Or connect with Bluetooth.</string>
+    <string name="receiver_locked">Too many wrong codes. Wait 5 minutes, then try again.</string>
+    <string name="receiver_full">4 phones already use this receiver.</string>
+    <string name="receiver_failed">The connection to the receiver failed.</string>
+
+    <!-- Preferences -->
+    <string name="prefs_title">Preferences</string>
+    <string name="prefs_haptics">Haptics</string>
+    <string name="prefs_haptics_detail">A short vibration when you press a button.</string>
+    <string name="prefs_screen_on">Keep screen on</string>
+    <string name="prefs_screen_on_detail">The screen stays on while the remote is open.</string>
+    <string name="prefs_gyro_speed">Gyro speed</string>
+    <string name="prefs_touch_speed">Touch pad speed</string>
+    <string name="prefs_speed_value">%1$.1f×</string>
+    <string name="prefs_controller_layout">Controller layout</string>
+    <string name="prefs_controller_layout_detail">Move and resize the buttons of the controller mode.</string>
+
+    <!-- Messages -->
+    <string name="msg_bt_lost">Bluetooth connection lost.</string>
+    <string name="msg_box_removed">%1$s removed. Pair again to use it.</string>
+    <string name="msg_connection_lost">Connection to %1$s lost.</string>
+    <string name="msg_new_certificate">%1$s has a new certificate. Forget the box and pair again.</string>
+    <string name="msg_cannot_connect">Cannot connect to %1$s: %2$s</string>
+    <string name="msg_key_not_on_bt">%1$s is not available over Bluetooth.</string>
+    <string name="msg_bt_us_only">Bluetooth can type only US keyboard characters.</string>
+
+    <!-- Bluetooth device record that the TV box shows -->
+    <string name="hid_description">Remote control, keyboard, mouse and game controller</string>
+
+    <!-- Help -->
+    <string name="help_title">Help</string>
+    <string name="help_start_title">Getting started</string>
+    <string name="help_start_1">TVBox Remote controls Android TV and Google TV boxes. It connects over Wi-Fi or Bluetooth.</string>
+    <string name="help_start_2">Open the menu and tap Devices. Boxes on your Wi-Fi network show automatically. Tap a box to connect.</string>
+    <string name="help_start_3">After the first connection, the app connects to the same box again when you open it.</string>
+    <string name="help_pair_title">Pairing with Wi-Fi</string>
+    <string name="help_pair_1">The phone and the box must use the same Wi-Fi network.</string>
+    <string name="help_pair_2">When you connect to a box for the first time, the TV shows a 6-character code. Type the code on the phone and tap Pair.</string>
+    <string name="help_pair_3">If the box does not show in the list, tap \"Add by IP address\". You can find the IP address on the box in Settings, then Network &amp; Internet.</string>
+    <string name="help_pair_4">To remove a box, tap the delete icon next to it, or hold its row.</string>
+    <string name="help_bt_title">Bluetooth</string>
+    <string name="help_bt_1">With Bluetooth, the phone acts as a Bluetooth keyboard, mouse, game controller and remote. The box needs no app and no Wi-Fi.</string>
+    <string name="help_bt_2">To pair: open Devices and tap \"Make phone visible\". On the box, open Settings, then Remotes &amp; Accessories, then Add accessory. Select this phone and confirm the code on both screens.</string>
+    <string name="help_bt_3">After pairing, the box shows in the Bluetooth list. Tap it to connect.</string>
+    <string name="help_bt_4">Over Bluetooth, the keyboard can type only the characters of a US keyboard. Some keys, for example Input and All apps, are not available. The Settings key works on some boxes only.</string>
+    <string name="help_mouse_title">Mouse and receiver</string>
+    <string name="help_mouse_1">Tap the mouse button on the remote. Point the phone at the TV and move it. The cursor follows. Tap the pad or the Click button to click. Drag with two fingers to scroll.</string>
+    <string name="help_mouse_2">You can turn the gyro off. Then drag one finger on the pad to move the cursor, like on a laptop.</string>
+    <string name="help_mouse_3">Over Bluetooth, the mouse works with no extra app.</string>
+    <string name="help_mouse_4">Over Wi-Fi, install the TVBox Remote Receiver app on the box and turn on its accessibility service. The first time, the TV shows a 4-digit code. Type it on the phone.</string>
+    <string name="help_controller_title">Controller mode</string>
+    <string name="help_controller_1">Tap the gamepad button on the remote. The phone turns to landscape and shows a game controller with two sticks, a D-pad, A, B, X, Y, Start, Select and the shoulder buttons.</string>
+    <string name="help_controller_2">Over Bluetooth, the box sees a real game controller with analog sticks. If the controller does not work after an update, remove the phone from the Bluetooth list of the box and pair again.</string>
+    <string name="help_controller_3">Over Wi-Fi, the buttons work, the left stick works as a D-pad, and the right stick moves the mouse cursor if the receiver app is installed.</string>
+    <string name="help_controller_4">To move or resize the buttons, open Preferences, then Controller layout.</string>
+    <string name="help_widget_title">Home screen widget</string>
+    <string name="help_widget_1">Add the TVBox Remote widget to your home screen for a small remote with a D-pad, Power, Back and Home.</string>
+    <string name="help_widget_2">If you use more than one TV box, swipe up or down on the widget to change the box. On Android 11 and earlier, tap the box name.</string>
+    <string name="help_keyboard_title">Keyboard</string>
+    <string name="help_keyboard_1">Select a text field on the TV, for example a search field. Then tap the keyboard button on the remote and type.</string>
+    <string name="help_keyboard_2">Over Wi-Fi, the text on the TV changes while you type. The Send key of the phone keyboard sends Enter.</string>
+    <string name="help_keyboard_3">Over Wi-Fi, the phone keyboard can open by itself when the box shows its keyboard.</string>
+    <string name="help_trouble_title">Troubleshooting</string>
+    <string name="help_trouble_1">No box in the list: make sure that the phone and the box use the same network. Some guest networks and mesh networks block device discovery. Use \"Add by IP address\".</string>
+    <string name="help_trouble_2">The connection fails after pairing: forget the box in Devices and pair again.</string>
+    <string name="help_trouble_3">\"The box has a new certificate\": the box was reset, or another device uses its address. Forget the box and pair again.</string>
+    <string name="help_trouble_4">The mouse does not work over Wi-Fi: make sure that the receiver app is installed and that its accessibility service is on.</string>
+    <string name="help_trouble_5">Bluetooth does not connect: remove the phone from the Bluetooth list of the box, remove the box from the phone, and pair again.</string>
+
+    <!-- About -->
+    <string name="about_title">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_what_title">What it does</string>
+    <string name="about_what">A simple remote control for Android TV and Google TV boxes, with a keyboard, a gyro mouse and a game controller.</string>
+    <string name="about_how_title">How it connects</string>
+    <string name="about_how">Wi-Fi: the Android TV Remote protocol (version 2), the same one as the Google TV remote. Bluetooth: the phone acts as a Bluetooth HID keyboard, mouse, game controller and remote. Mouse over Wi-Fi: the TVBox Remote Receiver app on the box.</string>
+    <string name="about_privacy_title">Privacy</string>
+    <string name="about_privacy">The app talks only to devices on your local network. It collects no data.</string>
+    <string name="about_credits_title">Credits</string>
+    <string name="about_credits">The description of the Android TV Remote protocol comes from the open-source androidtvremote2 project.</string>
+    <!-- Controller mode -->
+    <string name="controller_exit">Exit the controller</string>
+    <string name="controller_select">Select</string>
+    <string name="controller_start">Start</string>
+    <string name="controller_button">Button %1$s</string>
+    <string name="controller_left_stick">Left stick</string>
+    <string name="controller_right_stick">Right stick</string>
+    <string name="controller_right_unavailable">Right stick, not available: the receiver app is not connected</string>
+    <string name="controller_dpad">D-pad</string>
+    <string name="controller_wifi_note">Over Wi-Fi, the left stick works as a D-pad.</string>
+    <string name="controller_wifi_note_no_receiver">Over Wi-Fi, the left stick works as a D-pad. The right stick needs the receiver app.</string>
+    <string name="layout_hint">Drag a control to move it. Tap a control to change its size.</string>
+    <string name="layout_size">Size: %1$d%%</string>
+
+    <!-- Home screen widget -->
+    <string name="widget_name">Remote</string>
+    <string name="widget_description">A small remote with a D-pad, Power, Back and Home.</string>
+    <string name="widget_add_box">Add a TV box in the app</string>
+    <string name="widget_cannot_reach">Cannot reach %1$s</string>
+    <string name="widget_open_app">Open the app</string>
+    <string name="widget_next_device">Next device</string>
+    <!-- Theme and accent -->
+    <string name="prefs_theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="prefs_accent">Accent color</string>
+    <string name="accent_blue">Blue</string>
+    <string name="accent_green">Green</string>
+    <string name="accent_orange">Orange</string>
+    <string name="accent_red">Red</string>
+    <string name="accent_rainbow">RGB (rainbow)</string>
+    <string name="prefs_section_appearance">Appearance</string>
+    <string name="prefs_section_remote">Remote</string>
+    <string name="prefs_section_pointer">Pointer</string>
+    <string name="prefs_section_controller">Controller</string>
+    <string name="accent_rgb_short">RGB</string>
+    <string name="prefs_section_language">Language</string>
+    <string name="prefs_language">App language</string>
+    <string name="language_system">System</string>
+    <string name="language_en" translatable="false">English</string>
+    <string name="language_uk" translatable="false">Українська</string>
+</resources>

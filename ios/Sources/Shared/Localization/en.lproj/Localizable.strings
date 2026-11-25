@@ -1,0 +1,265 @@
+/* TVBox Remote: English text. The app and the widget extension both use this file.
+   To add a language, copy this file to a new <language>.lproj folder and translate the values.
+   Brand and protocol names stay in English: TVBox Remote, Android TV, Google TV, Wi-Fi, Bluetooth. */
+
+/* Common */
+"app.name" = "TVBox Remote";
+"app.storeName" = "Tiny TVBox Remote Control";
+"action.ok" = "OK";
+"action.done" = "Done";
+"action.cancel" = "Cancel";
+"action.add" = "Add";
+"action.forget" = "Forget";
+"action.pair" = "Pair";
+"action.tryAgain" = "Try again";
+"action.reset" = "Reset";
+
+/* Remote screen */
+"status.notConnected" = "Not connected";
+"status.connecting" = "Connecting…";
+"status.tapToReconnect" = "Tap a button to reconnect";
+"remote.devicesLabel %@" = "Devices. %@";
+"remote.keyboard" = "Keyboard";
+"remote.mouse" = "Mouse";
+"remote.controller" = "Controller";
+"remote.ok" = "OK";
+"remote.unmute" = "Unmute";
+"menu.open" = "Menu";
+"menu.devices" = "Devices";
+"menu.media" = "Media keys";
+"menu.preferences" = "Preferences";
+"menu.help" = "Help";
+"menu.about" = "About";
+"alert.noAddress" = "The app is still looking for the address of this box. Try again in a moment.";
+
+/* Remote keys */
+"key.home" = "Home";
+"key.back" = "Back";
+"key.up" = "Up";
+"key.down" = "Down";
+"key.left" = "Left";
+"key.right" = "Right";
+"key.center" = "OK";
+"key.volumeUp" = "Volume up";
+"key.volumeDown" = "Volume down";
+"key.power" = "Power";
+"key.enter" = "Enter";
+"key.delete" = "Delete";
+"key.menu" = "Menu";
+"key.search" = "Search";
+"key.playPause" = "Play/Pause";
+"key.next" = "Next";
+"key.previous" = "Previous";
+"key.rewind" = "Rewind";
+"key.fastForward" = "Fast forward";
+"key.mute" = "Mute";
+"key.info" = "Info";
+"key.channelUp" = "Channel up";
+"key.channelDown" = "Channel down";
+"key.guide" = "Guide";
+"key.captions" = "Captions";
+"key.settings" = "Settings";
+"key.tvInput" = "Input";
+"key.assistant" = "Assistant";
+"key.allApps" = "All apps";
+
+/* Devices screen */
+"devices.title" = "Devices";
+"devices.wifi" = "Wi-Fi";
+"devices.searching" = "Searching for TV boxes on your Wi-Fi…";
+"devices.wifiFooter" = "Your iPhone and the TV box must be on the same Wi-Fi network. Swipe left on a box to forget it.";
+"devices.addByIp" = "Add by IP address";
+"devices.addByIpHelp" = "Type the IP address of the TV box. On the box, you find it in Settings > Network & Internet.";
+"devices.disconnect" = "Disconnect";
+"devices.noBluetooth" = "iPhone cannot act as a Bluetooth remote, so this app uses Wi-Fi only.";
+"devices.invalidTitle" = "Address not valid";
+"devices.invalidText" = "Type an address such as 192.168.1.20.";
+"devices.mouseReady" = "Mouse ready";
+"devices.findingAddress" = "Finding address…";
+"devices.notPaired" = "Not paired";
+"devices.notSeen" = "Not seen on the network";
+
+/* Pairing */
+"pair.title" = "Pair with TV";
+"pair.connecting %@" = "Connecting to %@…";
+"pair.enterCode" = "Enter the code shown on your TV";
+"pair.invalidFormat" = "Type the 6 characters that the TV shows.";
+"pair.wrongCode" = "This code is wrong. Look at the TV and type the code again.";
+"pair.notReady" = "Wait until the TV shows the code.";
+"pair.receiverTitle" = "Pair with receiver";
+"pair.receiverEnterCode" = "Enter the 4-digit code shown on your TV";
+
+/* Keyboard and media keys */
+"keyboard.title" = "Keyboard";
+"keyboard.placeholder" = "Type here";
+"keyboard.delete" = "Delete";
+"keyboard.clear" = "Clear";
+"keyboard.hint" = "The text appears on the TV as you type. The Send key of the keyboard presses Enter on the box.";
+"media.title" = "Media keys";
+
+/* Mouse screen */
+"mouse.title" = "Mouse";
+"mouse.gyro" = "Gyro";
+"mouse.click" = "Click";
+"mouse.hintGyro" = "Point the phone to move. Tap to click.";
+"mouse.hintTouch" = "Drag to move. Tap to click.";
+"mouse.hintScroll" = "Two fingers scroll.";
+"mouse.connecting" = "Connecting to the receiver…";
+"mouse.enterCode" = "Enter the code shown on your TV.";
+"mouse.noReceiver" = "Install TVBox Remote Receiver on your box to use the mouse over Wi-Fi.";
+"receiver.cancelled" = "Pairing with the receiver was cancelled.";
+"receiver.codeExpired" = "The code expired. Look at the TV and type the new code.";
+"receiver.locked" = "Too many wrong codes. Pairing is locked for 5 minutes. Try again later.";
+"receiver.full" = "4 phones already use the mouse on this box.";
+
+/* Controller mode */
+"controller.select" = "Select";
+"controller.start" = "Start";
+"controller.exit" = "Exit";
+"controller.leftStick" = "Left stick";
+"controller.rightStick" = "Right stick";
+"controller.dpad" = "D-pad";
+"controller.unavailable" = "Needs the receiver app";
+"controller.wifiNote" = "Over Wi-Fi, the left stick works as a D-pad.";
+"controller.editor.title" = "Controller layout";
+"controller.editor.hint" = "Drag a control to move it. Tap a control to change its size.";
+"controller.editor.size %@" = "Size of %@";
+
+/* Preferences */
+"prefs.title" = "Preferences";
+"prefs.haptics" = "Haptics";
+"prefs.keepScreenOn" = "Keep screen on";
+"prefs.generalFooter" = "Haptics gives a short tick when you press a button. Keep screen on stops the iPhone from locking while the remote is open.";
+"prefs.mouseHeader" = "Mouse";
+"prefs.gyroSpeed" = "Gyro speed";
+"prefs.touchpadSpeed" = "Touch pad speed";
+"prefs.speedValue %@" = "%@×";
+"prefs.mouseFooter" = "A higher speed moves the cursor farther for the same movement of the phone or finger. The touch pad speed also sets the speed of the right stick in Controller mode.";
+"prefs.controllerLayout" = "Controller layout";
+"prefs.controllerLayoutFooter" = "Move the controls of Controller mode and change their size.";
+"prefs.appearanceHeader" = "Appearance";
+"prefs.theme" = "Theme";
+"prefs.theme.system" = "System";
+"prefs.theme.dark" = "Dark";
+"prefs.theme.light" = "Light";
+"prefs.accent" = "Accent";
+"prefs.accent.blue" = "Blue";
+"prefs.accent.green" = "Green";
+"prefs.accent.orange" = "Orange";
+"prefs.accent.red" = "Red";
+"prefs.accent.rgb" = "RGB";
+"prefs.section.remote" = "Remote";
+"prefs.section.pointer" = "Pointer";
+"prefs.section.controller" = "Controller";
+"prefs.section.language" = "Language";
+"prefs.language" = "App language";
+"prefs.language.hint" = "Opens Settings";
+"prefs.haptics.detail" = "A short vibration when you press a button.";
+"prefs.keepScreenOn.detail" = "The screen stays on while the remote is open.";
+"a11y.on" = "On";
+"a11y.off" = "Off";
+
+/* Help */
+"help.title" = "Help";
+"help.start.title" = "Getting started";
+"help.start.1" = "TVBox Remote controls an Android TV or Google TV box over Wi-Fi.";
+"help.start.2" = "1. Connect your iPhone to the same Wi-Fi network as the TV box.";
+"help.start.3" = "2. Open the menu (three dots) and tap Devices. The app shows the boxes that it finds.";
+"help.start.4" = "3. Tap your box. The first time, the app pairs with the box.";
+"help.start.5" = "When the dot next to the box name is green, the remote is ready. The app connects to the same box again the next time you open it.";
+"help.pairing.title" = "Pairing with Wi-Fi";
+"help.pairing.1" = "When you pair, the TV shows a code of 6 characters, for example 4A7F2C. Type the code on the iPhone and tap Pair.";
+"help.pairing.2" = "The code uses the numbers 0 to 9 and the letters A to F. If the app says that the code is wrong, look at the TV again and type the code again.";
+"help.pairing.3" = "You pair only one time. The box remembers this iPhone. If you reset the box, open Devices, swipe left on the box, tap Forget, and pair again.";
+"help.pairing.4" = "If the box does not show in Devices, tap Add by IP address. On the box, the IP address is in Settings > Network & Internet.";
+"help.buttons.title" = "Buttons";
+"help.buttons.1" = "The D-pad moves the focus on the TV. OK selects. Hold an arrow or a volume button to repeat it.";
+"help.buttons.2" = "Power turns the box on and off. Back, Home, and Settings work like the buttons of the original remote.";
+"help.buttons.3" = "Other keys, such as Play/Pause, Rewind, and Input, are in the menu under Media keys. The light on the right edge shows each command that goes to the box.";
+"help.mouse.title" = "Mouse and receiver";
+"help.mouse.1" = "The mouse moves a cursor on the TV. Tap the Mouse button on the main screen.";
+"help.mouse.2" = "The Android TV protocol has no mouse. To use the mouse, install the TVBox Remote Receiver app on the box, open it one time, and turn on its accessibility service when the app asks.";
+"help.mouse.3" = "The first time, the TV shows a 4-digit code. Type it on the iPhone.";
+"help.mouse.4" = "With Gyro on, point the iPhone at the TV with the screen up. Turn the phone left or right to move the cursor sideways. Tilt it up or down to move the cursor up or down.";
+"help.mouse.5" = "You can also drag one finger on the touch pad. Tap to click. Hold to long press. Drag two fingers to scroll.";
+"help.mouse.6" = "An iPhone cannot act as a Bluetooth mouse or remote, because iOS does not allow it. The mouse works only over Wi-Fi with the receiver app.";
+"help.controller.title" = "Controller mode";
+"help.controller.1" = "Tap the Controller button on the main screen. The screen turns to landscape and shows a game controller with two sticks, a D-pad, A, B, X, Y, Start, Select, and the shoulder buttons.";
+"help.controller.2" = "Over Wi-Fi, the buttons send game controller keys, and the left stick works as a D-pad.";
+"help.controller.3" = "The right stick moves the mouse cursor. It needs the TVBox Remote Receiver app on the box, paired one time on the Mouse screen.";
+"help.controller.4" = "To move the controls or change their size, open Preferences and tap Controller layout. Tap Exit at the top to go back to the remote.";
+"help.widget.title" = "Home Screen widget";
+"help.widget.1" = "On iOS 17 and later, add the TVBox Remote widget to the Home Screen. It is a small remote with a D-pad, Power, Back, and Home.";
+"help.widget.2" = "A press sends the key to the box without opening the app. The first press can take about one second, because the widget connects first.";
+"help.widget.3" = "To choose the box, touch and hold the widget and tap Edit Widget. If you have more than one box, the small arrows button in the widget shows the next box.";
+"help.keyboard.title" = "Keyboard";
+"help.keyboard.1" = "Select a text field on the TV, for example a search field. Then tap the Keyboard button.";
+"help.keyboard.2" = "The text appears on the TV while you type. The Send key presses Enter on the box. Delete removes the last character.";
+"help.keyboard.3" = "When the box opens its own on-screen keyboard, the app can open the keyboard for you.";
+"help.trouble.title" = "Troubleshooting";
+"help.trouble.1" = "No boxes in Devices: make sure that the iPhone and the box are on the same Wi-Fi network. In iPhone Settings > Privacy & Security > Local Network, make sure that TVBox Remote is on.";
+"help.trouble.2" = "Some Wi-Fi networks, such as guest networks, block devices from seeing each other. Use your home network or add the box by IP address.";
+"help.trouble.3" = "The connection fails after it worked before: the box can have a new IP address. Wait until the box shows in Devices again, or tap it there.";
+"help.trouble.4" = "\"The certificate of the box changed\": the box was reset or replaced. Forget the box in Devices and pair again.";
+"help.trouble.5" = "The mouse does not work: on the box, open TVBox Remote Receiver and make sure that its accessibility service is on.";
+"help.trouble.6" = "Power does not turn the box on: some boxes turn off their network in standby. Use the original remote to turn the box on, or turn on a network standby option on the box.";
+
+/* About */
+"about.title" = "About";
+"about.version %@ %@" = "Version %@ (%@)";
+"about.description" = "A simple remote control for Android TV and Google TV boxes.";
+"about.protocols.title" = "Protocols";
+"about.protocols.1" = "Android TV Remote protocol, version 2: the same protocol as the Google TV remote app. The app uses it for the buttons, the volume, power, the keyboard, and Controller mode. The connection uses TLS with a certificate that the app makes on this iPhone.";
+"about.protocols.2" = "TVBox Remote Receiver protocol: a small protocol for the mouse. It works with the TVBox Remote Receiver app on the box.";
+"about.protocols.3" = "Bonjour: the app uses it to find boxes and receivers on your Wi-Fi network.";
+"about.privacy.title" = "Privacy";
+"about.privacy.1" = "The app talks only to devices on your local network. It collects no data.";
+"about.privacy.2" = "The pairing data stays on this iPhone, in the keychain and in the app settings.";
+"about.credits.title" = "Credits";
+"about.credits.1" = "The description of the Android TV Remote protocol comes from the research of the open-source androidtvremote2 project.";
+"about.credits.2" = "Android, Android TV, and Google TV are trademarks of Google LLC. This app is not made or endorsed by Google.";
+
+/* Errors */
+"error.cert.cannotMake" = "The app could not make its client certificate.";
+"error.cert.cannotLoad" = "The app could not load its client certificate.";
+"error.cert.key %@" = "The app could not make its key. %@";
+"error.cert.sign %@" = "The app could not sign its certificate. %@";
+"error.cert.make" = "The app could not make its certificate.";
+"error.cert.keychain %lld" = "Keychain error %lld.";
+"error.cert.publicKey" = "The app could not read its public key.";
+"error.conn.badData" = "The box sent data that the app cannot read.";
+"error.conn.closed" = "The box closed the connection.";
+"error.conn.certChanged" = "The certificate of the box changed. Forget the box in Devices and pair again.";
+"error.conn.refused" = "The box refused the connection. Make sure that the box is on.";
+"error.conn.timeout" = "The box does not answer. Make sure that the box is on and on the same Wi-Fi network.";
+"error.conn.tls" = "The secure connection to the box failed.";
+"error.pair.noRsa" = "The box certificate has no RSA key, so the app cannot pair with it.";
+"error.pair.closed" = "The box closed the connection during pairing.";
+"error.pair.badMessage" = "The box sent a message that the app cannot read.";
+"error.pair.codeRejected" = "The box did not accept the code. Try again.";
+"error.pair.refused %lld" = "The box refused the pairing (status %lld).";
+"error.pair.noCert" = "The app could not read the certificate of the box.";
+"error.session.closed" = "The connection to the box closed.";
+"error.session.noAnswer" = "The box does not answer.";
+"error.session.stopped" = "The box stopped answering.";
+"error.session.certChanged" = "The certificate of the box changed. Forget the box in Devices and pair again.";
+"error.receiver.noAnswer" = "The receiver does not answer.";
+"error.receiver.tooMuch" = "The receiver sent too much data.";
+"error.receiver.closed" = "The receiver closed the connection.";
+"error.receiver.stopped" = "The receiver stopped answering.";
+
+/* Widget */
+"widget.name" = "TVBox Remote";
+"widget.description" = "A small remote for your TV box: D-pad, Power, Back, and Home.";
+"widget.empty" = "Add a TV box in the app";
+"widget.placeholderName" = "Living Room TV";
+"widget.cannotReach %@" = "Cannot reach %@";
+"widget.nextDevice" = "Next device";
+"widget.openApp" = "Open the app";
+"widget.config.title" = "TV box";
+"widget.config.description" = "Choose the TV box that this widget controls.";
+"widget.config.device" = "TV box";
+"widget.entity.device" = "TV box";
+"widget.intent.press" = "Press a key";
+"widget.intent.key" = "Key";
+"widget.intent.next" = "Next TV box";

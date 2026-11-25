@@ -1,0 +1,122 @@
+name: TVBoxRemote
+options:
+  bundleIdPrefix: com.tvboxremote
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    LOCALIZATION_PREFERS_STRING_CATALOGS: NO
+targets:
+  TVBoxRemote:
+    type: application
+    platform: iOS
+    sources:
+      # Sources/Shared (protocol, security, storage, theme, strings) is compiled by the widget too.
+      - path: Sources
+      - path: Resources
+    dependencies:
+      - target: TVBoxRemoteWidget
+        embed: true
+    info:
+      path: Generated/Info.plist
+      properties:
+        CFBundleDisplayName: TVBox Remote
+        CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
+        CFBundleLocalizations: [en, uk]
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UIRequiresFullScreen: true
+        # Portrait everywhere. AppDelegate allows landscape only while Controller mode
+        # or the controller layout editor is open (Sources/App/Orientation.swift).
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        # No UIUserInterfaceStyle: the Theme preference sets the color scheme (System, Dark or Light).
+        NSLocalNetworkUsageDescription: TVBox Remote finds and controls the TV boxes on your Wi-Fi network.
+        NSBonjourServices:
+          - _androidtvremote2._tcp
+          - _tvboxremote._tcp
+        NSMotionUsageDescription: TVBox Remote uses the gyroscope to move the mouse cursor on the TV.
+        # The widget opens the app with tvboxremote://open.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.tvboxremote.ios
+            CFBundleURLSchemes: [tvboxremote]
+        # Read by SharedConfig.keychainGroup. Must match keychain-access-groups below.
+        TVBRKeychainGroup: $(AppIdentifierPrefix)com.tvboxremote.shared
+    entitlements:
+      path: Config/App.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.tvboxremote.shared
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)com.tvboxremote.shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tvboxremote.ios
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_PREVIEWS: true
+  TVBoxRemoteWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Sources/Shared
+      - path: Widget
+    info:
+      path: Generated/Widget-Info.plist
+      properties:
+        CFBundleDisplayName: TVBox Remote
+        CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
+        CFBundleLocalizations: [en, uk]
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        NSLocalNetworkUsageDescription: TVBox Remote finds and controls the TV boxes on your Wi-Fi network.
+        TVBRKeychainGroup: $(AppIdentifierPrefix)com.tvboxremote.shared
+    entitlements:
+      path: Config/Widget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.tvboxremote.shared
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)com.tvboxremote.shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tvboxremote.ios.widget
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        SKIP_INSTALL: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
+  TVBoxRemoteTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: TVBoxRemote
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tvboxremote.ios.tests
+        GENERATE_INFOPLIST_FILE: true
+schemes:
+  TVBoxRemote:
+    build:
+      targets:
+        TVBoxRemote: all
+        TVBoxRemoteTests: [test]
+    test:
+      targets:
+        - TVBoxRemoteTests

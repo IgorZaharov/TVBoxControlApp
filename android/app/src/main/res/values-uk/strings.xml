@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common actions -->
+    <string name="action_back">Назад</string>
+    <string name="action_cancel">Скасувати</string>
+    <string name="action_add">Додати</string>
+    <string name="action_forget">Забути</string>
+    <string name="action_pair">Підключити</string>
+    <string name="action_done">Готово</string>
+    <string name="action_try_again">Спробувати ще</string>
+    <string name="action_reset">Скинути</string>
+    <string name="state_expanded">Розгорнуто</string>
+    <string name="state_collapsed">Згорнуто</string>
+
+    <!-- Remote screen -->
+    <string name="menu_open">Меню</string>
+    <string name="menu_devices">Пристрої</string>
+    <string name="menu_media">Медіаклавіші</string>
+    <string name="menu_preferences">Налаштування</string>
+    <string name="menu_help">Довідка</string>
+    <string name="menu_about">Про застосунок</string>
+    <string name="status_not_connected">Не підключено</string>
+    <string name="status_tap_to_connect">Торкніться, щоб підключити</string>
+    <string name="status_connecting">Підключення…</string>
+    <string name="status_connected">Підключено</string>
+    <string name="transport_wifi">Wi-Fi</string>
+    <string name="transport_bluetooth">Bluetooth</string>
+    <string name="volume_level">Гучність %1$d з %2$d</string>
+    <string name="btn_keyboard">Клавіатура</string>
+    <string name="btn_mouse">Миша</string>
+    <string name="btn_controller">Геймпад</string>
+
+    <!-- Remote keys -->
+    <string name="key_up">Вгору</string>
+    <string name="key_down">Вниз</string>
+    <string name="key_left">Ліворуч</string>
+    <string name="key_right">Праворуч</string>
+    <string name="key_ok">OK</string>
+    <string name="key_back">Назад</string>
+    <string name="key_home">Головний екран</string>
+    <string name="key_settings">Налаштування</string>
+    <string name="key_power">Живлення</string>
+    <string name="key_volume_up">Гучніше</string>
+    <string name="key_volume_down">Тихіше</string>
+    <string name="key_mute">Вимкнути звук</string>
+    <string name="key_unmute">Увімкнути звук</string>
+    <string name="key_enter">Enter</string>
+    <string name="key_delete">Видалити</string>
+    <string name="key_menu">Меню</string>
+    <string name="key_search">Пошук</string>
+    <string name="key_play_pause">Відтворення/пауза</string>
+    <string name="key_next">Далі</string>
+    <string name="key_previous">Назад</string>
+    <string name="key_rewind">Перемотати назад</string>
+    <string name="key_fast_forward">Перемотати вперед</string>
+    <string name="key_channel_up">Наступний канал</string>
+    <string name="key_channel_down">Попередній канал</string>
+    <string name="key_guide">Телегід</string>
+    <string name="key_input">Джерело</string>
+    <string name="key_all_apps">Усі застосунки</string>
+
+    <!-- Devices screen -->
+    <string name="devices_title">Пристрої</string>
+    <string name="section_wifi">Wi-Fi</string>
+    <string name="section_bluetooth">Bluetooth</string>
+    <string name="devices_wifi_searching">Пошук приставок Android TV і Google TV у цій мережі. Телефон і приставка мають бути в одній мережі Wi-Fi.</string>
+    <string name="devices_mouse_ready">%1$s · Миша готова</string>
+    <string name="devices_add_by_ip">Додати за IP-адресою</string>
+    <string name="bt_unavailable">Цей телефон не може працювати як пульт Bluetooth. Використовуйте Wi-Fi.</string>
+    <string name="bt_allow_hint">Дозвольте Bluetooth, щоб використовувати телефон як пульт, клавіатуру, мишу й геймпад Bluetooth.</string>
+    <string name="bt_allow">Дозволити Bluetooth</string>
+    <string name="bt_off">Bluetooth вимкнено.</string>
+    <string name="bt_turn_on">Увімкнути Bluetooth</string>
+    <string name="bt_none_paired">Ще немає підключених пристроїв Bluetooth.</string>
+    <string name="bt_paired">Підключено раніше</string>
+    <string name="bt_searching">Пошук…</string>
+    <string name="bt_find_nearby">Знайти поруч</string>
+    <string name="bt_make_visible">Зробити телефон видимим</string>
+    <string name="bt_tap_to_pair">Торкніться, щоб підключити</string>
+    <string name="bt_pair_help">Щоб підключити: торкніться «Зробити телефон видимим». На приставці відкрийте «Налаштування», потім «Пульти й аксесуари», потім «Додати аксесуар» і виберіть цей телефон. Або торкніться «Знайти поруч» і виберіть приставку.</string>
+    <string name="forget_title">Забути %1$s?</string>
+    <string name="forget_text">Телефон видалить підключення до цієї приставки. Щоб знову користуватися приставкою, потрібно підключити її ще раз.</string>
+    <string name="forget_description">Забути %1$s</string>
+    <string name="add_ip_help">IP-адресу можна знайти на приставці: «Налаштування», потім «Мережа й Інтернет», потім ваша мережа.</string>
+    <string name="add_ip_address">IP-адреса</string>
+    <string name="add_ip_name">Назва (необов\'язково)</string>
+
+    <!-- Pairing dialogs -->
+    <string name="pair_box_title">Підключення до приставки</string>
+    <string name="pair_receiver_title">Підключення приймача миші</string>
+    <string name="pair_box_text">Введіть код, показаний на телевізорі.</string>
+    <string name="pair_receiver_text">Введіть 4-значний код, показаний на телевізорі.</string>
+    <string name="pair_wrong_code">Код неправильний. Спробуйте ще раз.</string>
+    <string name="pair_refused_code">Приставка не прийняла код.</string>
+    <string name="pair_refused_config">Приставка не прийняла параметри підключення.</string>
+    <string name="pair_failed_status">Не вдалося підключити (статус %1$d).</string>
+    <string name="pair_unexpected">Неочікувана відповідь від приставки.</string>
+
+    <!-- Keyboard and media sheets -->
+    <string name="keyboard_title">Введення на телевізорі</string>
+    <string name="keyboard_hint">Спочатку виберіть текстове поле на телевізорі. Кожна зміна одразу йде на приставку.</string>
+    <string name="keyboard_placeholder">Текст</string>
+    <string name="keyboard_clear">Очистити</string>
+    <string name="media_title">Медіаклавіші</string>
+
+    <!-- Mouse screen -->
+    <string name="mouse_title">Миша</string>
+    <string name="mouse_gyro">Гіроскоп</string>
+    <string name="mouse_hint_gyro">Наведіть телефон на телевізор і рухайте ним.\nТоркніться, щоб натиснути. Проведіть двома пальцями, щоб прокрутити.</string>
+    <string name="mouse_hint_touch">Проведіть пальцем, щоб рухати курсор. Торкніться, щоб натиснути.\nПроведіть двома пальцями, щоб прокрутити.</string>
+    <string name="mouse_click">Натиснути</string>
+    <string name="mouse_connect_first">Спочатку підключіться до приставки.</string>
+    <string name="mouse_receiver_connecting">Підключення до приймача миші…</string>
+    <string name="mouse_enter_code">Введіть код, показаний на телевізорі.</string>
+    <string name="mouse_install_receiver">Установіть на приставку TVBox Remote Receiver, щоб користуватися мишею через Wi-Fi. Або підключіться через Bluetooth.</string>
+    <string name="receiver_locked">Забагато неправильних кодів. Зачекайте 5 хвилин і спробуйте ще раз.</string>
+    <string name="receiver_full">Цим приймачем уже користуються 4 телефони.</string>
+    <string name="receiver_failed">Не вдалося підключитися до приймача.</string>
+
+    <!-- Preferences -->
+    <string name="prefs_title">Налаштування</string>
+    <string name="prefs_haptics">Вібровідгук</string>
+    <string name="prefs_haptics_detail">Коротка вібрація під час натискання кнопки.</string>
+    <string name="prefs_screen_on">Не вимикати екран</string>
+    <string name="prefs_screen_on_detail">Екран не гасне, поки відкритий пульт.</string>
+    <string name="prefs_gyro_speed">Швидкість гіроскопа</string>
+    <string name="prefs_touch_speed">Швидкість сенсорної панелі</string>
+    <string name="prefs_speed_value">%1$.1f×</string>
+    <string name="prefs_controller_layout">Розкладка геймпада</string>
+    <string name="prefs_controller_layout_detail">Переміщуйте кнопки режиму геймпада й змінюйте їхній розмір.</string>
+
+    <!-- Messages -->
+    <string name="msg_bt_lost">З’єднання Bluetooth втрачено.</string>
+    <string name="msg_box_removed">%1$s видалено. Щоб користуватися нею, підключіть її знову.</string>
+    <string name="msg_connection_lost">З’єднання з %1$s втрачено.</string>
+    <string name="msg_new_certificate">%1$s має новий сертифікат. Забудьте приставку й підключіть її знову.</string>
+    <string name="msg_cannot_connect">Не вдалося підключитися до %1$s: %2$s</string>
+    <string name="msg_key_not_on_bt">Клавіша «%1$s» недоступна через Bluetooth.</string>
+    <string name="msg_bt_us_only">Через Bluetooth можна вводити лише символи англійської (США) клавіатури.</string>
+
+    <!-- Bluetooth device record that the TV box shows -->
+    <string name="hid_description">Пульт, клавіатура, миша й геймпад</string>
+
+    <!-- Help -->
+    <string name="help_title">Довідка</string>
+    <string name="help_start_title">Початок роботи</string>
+    <string name="help_start_1">TVBox Remote керує приставками Android TV і Google TV. Він підключається через Wi-Fi або Bluetooth.</string>
+    <string name="help_start_2">Відкрийте меню й торкніться «Пристрої». Приставки у вашій мережі Wi-Fi з’являться автоматично. Торкніться приставки, щоб підключитися.</string>
+    <string name="help_start_3">Після першого підключення застосунок під час запуску сам підключається до тієї самої приставки.</string>
+    <string name="help_pair_title">Підключення через Wi-Fi</string>
+    <string name="help_pair_1">Телефон і приставка мають бути в одній мережі Wi-Fi.</string>
+    <string name="help_pair_2">Коли ви вперше підключаєтеся до приставки, телевізор показує код із 6 символів. Введіть код на телефоні й торкніться «Підключити».</string>
+    <string name="help_pair_3">Якщо приставки немає в списку, торкніться «Додати за IP-адресою». IP-адресу можна знайти на приставці в «Налаштуваннях», потім «Мережа й Інтернет».</string>
+    <string name="help_pair_4">Щоб видалити приставку, торкніться значка видалення поруч із нею або утримуйте її рядок.</string>
+    <string name="help_bt_title">Bluetooth</string>
+    <string name="help_bt_1">Через Bluetooth телефон працює як клавіатура, миша, геймпад і пульт Bluetooth. Приставці не потрібні ні застосунок, ні Wi-Fi.</string>
+    <string name="help_bt_2">Щоб підключити: відкрийте «Пристрої» й торкніться «Зробити телефон видимим». На приставці відкрийте «Налаштування», потім «Пульти й аксесуари», потім «Додати аксесуар». Виберіть цей телефон і підтвердьте код на обох екранах.</string>
+    <string name="help_bt_3">Після підключення приставка з’явиться в списку Bluetooth. Торкніться її, щоб підключитися.</string>
+    <string name="help_bt_4">Через Bluetooth клавіатура вводить лише символи англійської (США) клавіатури. Деякі клавіші, наприклад «Джерело» й «Усі застосунки», недоступні. Клавіша «Налаштування» працює лише на деяких приставках.</string>
+    <string name="help_mouse_title">Миша й приймач</string>
+    <string name="help_mouse_1">Торкніться кнопки миші на пульті. Наведіть телефон на телевізор і рухайте ним — курсор рухатиметься слідом. Торкніться панелі або кнопки «Натиснути», щоб натиснути. Проведіть двома пальцями, щоб прокрутити.</string>
+    <string name="help_mouse_2">Гіроскоп можна вимкнути. Тоді проводьте одним пальцем по панелі, щоб рухати курсор, як на ноутбуці.</string>
+    <string name="help_mouse_3">Через Bluetooth миша працює без додаткового застосунку.</string>
+    <string name="help_mouse_4">Для миші через Wi-Fi установіть на приставку застосунок TVBox Remote Receiver і ввімкніть його службу доступності. Першого разу телевізор покаже 4-значний код. Введіть його на телефоні.</string>
+    <string name="help_controller_title">Режим геймпада</string>
+    <string name="help_controller_1">Торкніться кнопки геймпада на пульті. Телефон перейде в альбомну орієнтацію й покаже геймпад із двома стіками, хрестовиною, кнопками A, B, X, Y, Start, Select і бічними кнопками.</string>
+    <string name="help_controller_2">Через Bluetooth приставка бачить справжній геймпад з аналоговими стіками. Якщо геймпад не працює після оновлення, видаліть телефон зі списку Bluetooth приставки й підключіть знову.</string>
+    <string name="help_controller_3">Через Wi-Fi працюють кнопки, лівий стік працює як хрестовина, а правий рухає курсор миші, якщо встановлено застосунок-приймач.</string>
+    <string name="help_controller_4">Щоб перемістити кнопки або змінити їхній розмір, відкрийте «Налаштування», потім «Розкладка геймпада».</string>
+    <string name="help_widget_title">Віджет на головному екрані</string>
+    <string name="help_widget_1">Додайте віджет TVBox Remote на головний екран — це маленький пульт із хрестовиною та кнопками живлення, «Назад» і «Головний екран».</string>
+    <string name="help_widget_2">Якщо у вас кілька приставок, проведіть по віджету вгору або вниз, щоб змінити приставку. На Android 11 і старіших версіях торкніться назви приставки.</string>
+    <string name="help_keyboard_title">Клавіатура</string>
+    <string name="help_keyboard_1">Виберіть текстове поле на телевізорі, наприклад поле пошуку. Потім торкніться кнопки клавіатури на пульті й вводьте текст.</string>
+    <string name="help_keyboard_2">Через Wi-Fi текст на телевізорі змінюється під час введення. Клавіша «Надіслати» на клавіатурі телефона надсилає Enter.</string>
+    <string name="help_keyboard_3">Через Wi-Fi клавіатура телефона може відкритися сама, коли приставка показує свою клавіатуру.</string>
+    <string name="help_trouble_title">Вирішення проблем</string>
+    <string name="help_trouble_1">Приставки немає в списку: переконайтеся, що телефон і приставка в одній мережі. Деякі гостьові й mesh-мережі блокують пошук пристроїв. Скористайтеся «Додати за IP-адресою».</string>
+    <string name="help_trouble_2">З’єднання не працює після підключення: забудьте приставку в «Пристроях» і підключіть знову.</string>
+    <string name="help_trouble_3">«Приставка має новий сертифікат»: приставку скинуто або інший пристрій використовує її адресу. Забудьте приставку й підключіть знову.</string>
+    <string name="help_trouble_4">Миша не працює через Wi-Fi: переконайтеся, що застосунок-приймач установлено і його службу доступності ввімкнено.</string>
+    <string name="help_trouble_5">Bluetooth не підключається: видаліть телефон зі списку Bluetooth приставки, видаліть приставку з телефона й підключіть знову.</string>
+
+    <!-- About -->
+    <string name="about_title">Про застосунок</string>
+    <string name="about_version">Версія %1$s</string>
+    <string name="about_what_title">Що він робить</string>
+    <string name="about_what">Простий пульт для приставок Android TV і Google TV з клавіатурою, гіромишею й геймпадом.</string>
+    <string name="about_how_title">Як він підключається</string>
+    <string name="about_how">Wi-Fi: протокол Android TV Remote (версія 2), той самий, що й у пульта Google TV. Bluetooth: телефон працює як HID-клавіатура, миша, геймпад і пульт Bluetooth. Миша через Wi-Fi: застосунок TVBox Remote Receiver на приставці.</string>
+    <string name="about_privacy_title">Конфіденційність</string>
+    <string name="about_privacy">Застосунок спілкується лише з пристроями у вашій локальній мережі. Він не збирає жодних даних.</string>
+    <string name="about_credits_title">Подяки</string>
+    <string name="about_credits">Опис протоколу Android TV Remote взято з проєкту з відкритим кодом androidtvremote2.</string>
+    <!-- Controller mode -->
+    <string name="controller_exit">Вийти з режиму геймпада</string>
+    <string name="controller_select">Select</string>
+    <string name="controller_start">Start</string>
+    <string name="controller_button">Кнопка %1$s</string>
+    <string name="controller_left_stick">Лівий стік</string>
+    <string name="controller_right_stick">Правий стік</string>
+    <string name="controller_right_unavailable">Правий стік недоступний: застосунок-приймач не підключено</string>
+    <string name="controller_dpad">Хрестовина</string>
+    <string name="controller_wifi_note">Через Wi-Fi лівий стік працює як хрестовина.</string>
+    <string name="controller_wifi_note_no_receiver">Через Wi-Fi лівий стік працює як хрестовина. Для правого стіка потрібен застосунок-приймач.</string>
+    <string name="layout_hint">Перетягніть кнопку, щоб перемістити її. Торкніться кнопки, щоб змінити її розмір.</string>
+    <string name="layout_size">Розмір: %1$d%%</string>
+
+    <!-- Home screen widget -->
+    <string name="widget_name">Пульт</string>
+    <string name="widget_description">Маленький пульт із хрестовиною та кнопками живлення, «Назад» і «Додому».</string>
+    <string name="widget_add_box">Додайте TV-приставку в застосунку</string>
+    <string name="widget_cannot_reach">Не вдається з\'єднатися з «%1$s»</string>
+    <string name="widget_open_app">Відкрити застосунок</string>
+    <string name="widget_next_device">Наступний пристрій</string>
+    <!-- Theme and accent -->
+    <string name="prefs_theme">Тема</string>
+    <string name="theme_system">Системна</string>
+    <string name="theme_dark">Темна</string>
+    <string name="theme_light">Світла</string>
+    <string name="prefs_accent">Колір акценту</string>
+    <string name="accent_blue">Синій</string>
+    <string name="accent_green">Зелений</string>
+    <string name="accent_orange">Помаранчевий</string>
+    <string name="accent_red">Червоний</string>
+    <string name="accent_rainbow">RGB (веселка)</string>
+    <string name="prefs_section_appearance">Вигляд</string>
+    <string name="prefs_section_remote">Пульт</string>
+    <string name="prefs_section_pointer">Вказівник</string>
+    <string name="prefs_section_controller">Геймпад</string>
+    <string name="accent_rgb_short">RGB</string>
+    <string name="prefs_section_language">Мова</string>
+    <string name="prefs_language">Мова застосунку</string>
+    <string name="language_system">Як у системі</string>
+</resources>
