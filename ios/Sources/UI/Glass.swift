@@ -308,3 +308,112 @@ private struct TilePressStyle: ButtonStyle {
             .animation(Motion.press, value: configuration.isPressed)
     }
 }
+
+// MARK: - Background picker
+
+/// Background: three tiles. Each tile shows the texture on the dark theme (left half) and the light theme
+/// (right half). See docs/UI_SPEC.md, "Preferences".
+@MainActor
+struct BackgroundPicker: View {
+    @Binding var selection: BackgroundTexture
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(BackgroundTexture.allCases) { texture in
+                BackgroundTile(texture: texture, selected: texture == selection) {
+                    selection = texture
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(L10n.t("prefs.background"))
+    }
+}
+
+@MainActor
+private struct BackgroundTile: View {
+    let texture: BackgroundTexture
+    let selected: Bool
+    let action: () -> Void
+
+    @Environment(\.accent) private var accent
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                BackgroundSample(texture: texture)
+                    .frame(height: 76)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(borderColor, lineWidth: selected ? 2 : 1)
+                    )
+                    .overlay(alignment: .topTrailing) {
+                        if selected {
+                            Circle()
+                                .fill(accent.accent)
+                                .frame(width: 20, height: 20)
+                                .overlay(
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 10, weight: .heavy))
+                                        .foregroundColor(accent.onAccent)
+                                )
+                                .padding(5)
+                                .accessibilityHidden(true)
+                        }
+                    }
+                Text(texture.title)
+                    .font(.system(size: 12, weight: selected ? .semibold : .regular))
+                    .foregroundColor(selected ? Theme.onSurface : Theme.muted)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(texture.title)
+        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private var borderColor: Color {
+        if selected { return accent.accent }
+        return colorScheme == .light ? Color.black.opacity(0.1) : Color.white.opacity(0.1)
+    }
+}
+
+/// A window into a phone-size background at its real scale: the dark theme on the left half, the light theme
+/// on the right half.
+private struct BackgroundSample: View {
+    let texture: BackgroundTexture
+
+    private static let screen = CGSize(width: 360, height: 760)
+    private static let origin = CGPoint(x: 126, y: 228)
+
+    var body: some View {
+        GeometryReader { geometry in
+            let half = geometry.size.width / 2
+            HStack(spacing: 0) {
+                window(x: Self.origin.x)
+                    .environment(\.colorScheme, .dark)
+                    .frame(width: half, height: geometry.size.height)
+                    .clipped()
+                window(x: Self.origin.x + half)
+                    .environment(\.colorScheme, .light)
+                    .frame(width: half, height: geometry.size.height)
+                    .clipped()
+            }
+            .overlay(Rectangle().fill(Color.black.opacity(0.25)).frame(width: 1))
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func window(x: CGFloat) -> some View {
+        Color.clear.overlay(alignment: .topLeading) {
+            RemoteBackground(texture: texture)
+                .frame(width: Self.screen.width, height: Self.screen.height)
+                .offset(x: -x, y: -Self.origin.y)
+        }
+    }
+}

@@ -1,5 +1,8 @@
 package com.tvboxremote.app.ui
 
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.graphics.FilterQuality
 import android.content.Context
 import android.graphics.BlurMaskFilter
 import android.hardware.Sensor
@@ -108,49 +111,78 @@ private val lightGrain: ImageBitmap by lazy { grain(light = true) }
 
 /**
  * The textured background of the remote screen (docs/UI_SPEC.md, "Background texture"): a gradient, a soft accent
- * light at the top, a slight pebble leather and a fine grain.
- * The colors are read while drawing, so a theme or accent change redraws it without a recomposition.
+ * light at the top, the texture of the Background preference (none, pebble leather or satin) and a fine grain.
+ * The colors and the texture are read while drawing, so a change redraws it without a recomposition.
  */
 @Composable
 fun Modifier.remoteBackground(): Modifier {
-    val leather = rememberLeatherBrush()
-    return drawBehind { drawAppBackground(leather, size) }
+    val textures = rememberBackgroundTextures()
+    return drawBehind { drawAppBackground(textures, size) }
 }
 
-/** The leather tile (res/drawable-nodpi, made by tools/make_leather.py) is 384 px for 128 dp: scale it to the screen. */
+/** The images of the background textures. */
+class BackgroundTextures(val leather: ShaderBrush, val satin: ImageBitmap)
+
+/**
+ * The leather tile (res/drawable-nodpi, made by tools/make_leather.py) is 384 px for 128 dp: scale it to the screen.
+ * The satin image (made by tools/make_satin.py) is not a tile: it fills the screen.
+ */
 @Composable
-private fun rememberLeatherBrush(): ShaderBrush {
+fun rememberBackgroundTextures(): BackgroundTextures {
     val leather = ImageBitmap.imageResource(R.drawable.leather_grain)
+    val satin = ImageBitmap.imageResource(R.drawable.satin_folds)
     val density = LocalDensity.current.density
-    return remember(leather, density) {
+    return remember(leather, satin, density) {
         val shader = android.graphics.BitmapShader(
             leather.asAndroidBitmap(), android.graphics.Shader.TileMode.REPEAT, android.graphics.Shader.TileMode.REPEAT,
         )
         shader.setLocalMatrix(android.graphics.Matrix().apply { setScale(density / 3f, density / 3f) })
-        ShaderBrush(shader)
+        BackgroundTextures(ShaderBrush(shader), satin)
     }
 }
 
 /**
  * Draws the app background of a screen of [screen] size, as it lies under a box at [origin] (root coordinates).
- * The screen draws it at the origin. A glass card draws the part under itself and blurs it.
+ * The screen draws it at the origin. A glass card draws the part under itself and blurs it. The Background picker
+ * in Preferences draws a part of it with a fixed [theme].
  */
-private fun DrawScope.drawAppBackground(leather: ShaderBrush, screen: Size, origin: Offset = Offset.Zero) {
+fun DrawScope.drawAppBackground(
+    textures: BackgroundTextures,
+    screen: Size,
+    origin: Offset = Offset.Zero,
+    theme: ThemeColors = Palette.theme,
+    accent: Color = Palette.accent,
+    texture: BackgroundTexture = Palette.texture,
+) {
     translate(-origin.x, -origin.y) {
-        drawRect(
-            Brush.verticalGradient(listOf(Palette.backgroundTop, Palette.backgroundBottom), endY = screen.height),
-            size = screen,
-        )
+        drawRect(Brush.verticalGradient(listOf(theme.backgroundTop, theme.backgroundBottom), endY = screen.height), size = screen)
         drawRect(
             Brush.radialGradient(
-                listOf(Palette.accent.copy(alpha = 0.07f), Color.Transparent),
+                listOf(accent.copy(alpha = 0.07f), Color.Transparent),
                 center = Offset(screen.width / 2f, 0f),
                 radius = screen.width * 0.7f,
             ),
             size = screen,
         )
-        drawRect(leather, size = screen, alpha = if (Palette.isDark) 1f else 0.55f)
-        val tile = if (Palette.isDark) darkGrain else lightGrain
+        when (texture) {
+            BackgroundTexture.GRADIENT -> Unit
+            BackgroundTexture.LEATHER -> drawRect(textures.leather, size = screen, alpha = if (theme.isDark) 1f else 0.55f)
+            BackgroundTexture.SATIN -> {
+                // Scale to fill the screen and crop the rest, so the folds keep their shape.
+                val image = textures.satin
+                val scale = maxOf(screen.width / image.width, screen.height / image.height)
+                val w = (image.width * scale).roundToInt()
+                val h = (image.height * scale).roundToInt()
+                drawImage(
+                    image,
+                    dstOffset = IntOffset(((screen.width - w) / 2f).roundToInt(), ((screen.height - h) / 2f).roundToInt()),
+                    dstSize = IntSize(w, h),
+                    alpha = if (theme.isDark) 1f else 0.7f,
+                    filterQuality = FilterQuality.Medium,
+                )
+            }
+        }
+        val tile = if (theme.isDark) darkGrain else lightGrain
         drawRect(ShaderBrush(ImageShader(tile, TileMode.Repeated, TileMode.Repeated)), size = screen)
     }
 }
@@ -437,7 +469,7 @@ private val GlassBlur = 16.dp
  */
 @Composable
 fun GlassBox(shape: Shape, modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
-    val leather = rememberLeatherBrush()
+    val textures = rememberBackgroundTextures()
     var origin by remember { mutableStateOf(Offset.Zero) }
     var screen by remember { mutableStateOf(Size.Zero) }
     Box(modifier.glassShadow(shape)) {
@@ -454,7 +486,7 @@ fun GlassBox(shape: Shape, modifier: Modifier = Modifier, content: @Composable B
                     this.shape = shape
                     clip = true
                 }
-                .drawBehind { if (screen != Size.Zero) drawAppBackground(leather, screen, origin) },
+                .drawBehind { if (screen != Size.Zero) drawAppBackground(textures, screen, origin) },
         )
         Box(Modifier.matchParentSize().glassFill(shape))
         content()

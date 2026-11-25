@@ -1,3 +1,4 @@
+import AudioToolbox
 import Foundation
 import UIKit
 
@@ -8,6 +9,11 @@ final class Preferences: ObservableObject {
 
     @Published var haptics: Bool {
         didSet { defaults.set(haptics, forKey: Keys.haptics) }
+    }
+
+    /// A soft tap sound on each button press. Default off.
+    @Published var pressSound: Bool {
+        didSet { defaults.set(pressSound, forKey: Keys.pressSound) }
     }
 
     @Published var gyroSpeed: Double {
@@ -37,6 +43,11 @@ final class Preferences: ObservableObject {
         didSet { defaults.set(accent.rawValue, forKey: Keys.accent) }
     }
 
+    /// Default: the gradient.
+    @Published var background: BackgroundTexture {
+        didSet { defaults.set(background.rawValue, forKey: Keys.background) }
+    }
+
     private let defaults: UserDefaults
 
     private enum Keys {
@@ -47,6 +58,8 @@ final class Preferences: ObservableObject {
         static let gyroEnabled = "pref.gyroEnabled"
         static let theme = "pref.theme"
         static let accent = "pref.accent"
+        static let pressSound = "pref.pressSound"
+        static let background = "pref.background"
     }
 
     init(defaults: UserDefaults = SharedConfig.defaults) {
@@ -58,15 +71,38 @@ final class Preferences: ObservableObject {
         gyroEnabled = defaults.object(forKey: Keys.gyroEnabled) as? Bool ?? true
         theme = defaults.string(forKey: Keys.theme).flatMap(ThemeChoice.init(rawValue:)) ?? .dark
         accent = defaults.string(forKey: Keys.accent).flatMap(AccentChoice.init(rawValue:)) ?? .blue
+        pressSound = defaults.object(forKey: Keys.pressSound) as? Bool ?? false
+        background = defaults.string(forKey: Keys.background).flatMap(BackgroundTexture.init(rawValue:)) ?? .gradient
     }
 }
 
 @MainActor
 enum Haptics {
+    /// The feedback of one button press: the haptic tick and the tap sound, as the preferences say.
+    static func press(_ prefs: Preferences) {
+        tick(enabled: prefs.haptics)
+        if prefs.pressSound { PressSound.play() }
+    }
+
     /// A short, light tick.
     static func tick(enabled: Bool) {
         guard enabled else { return }
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
+    }
+}
+
+/// The button press sound: tap.wav (made by tools/make_tap.py), a soft 35 ms tap. It plays as a system sound,
+/// so it follows the system volume and the silent switch mutes it.
+@MainActor
+enum PressSound {
+    private static let soundID: SystemSoundID? = {
+        guard let url = Bundle.main.url(forResource: "tap", withExtension: "wav") else { return nil }
+        var id: SystemSoundID = 0
+        return AudioServicesCreateSystemSoundID(url as CFURL, &id) == 0 ? id : nil
+    }()
+
+    static func play() {
+        if let soundID { AudioServicesPlaySystemSound(soundID) }
     }
 }

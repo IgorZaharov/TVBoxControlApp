@@ -11,6 +11,7 @@ struct AppearanceRoot<Content: View>: View {
 
     var body: some View {
         AccentProvider(choice: prefs.accent, content: content)
+            .environment(\.backgroundTexture, prefs.background)
             .preferredColorScheme(prefs.theme.colorScheme)
     }
 }

@@ -19,6 +19,9 @@ final class AtvRemoteSession {
     var onVolume: ((VolumeInfo) -> Void)?
     var onPower: ((Bool) -> Void)?
     var onImeShow: ((String) -> Void)?
+    /// A text field on the box got the focus or the box keyboard opened. After this, the stored counters belong to
+    /// that field, and text goes into it.
+    var onImeFocus: (() -> Void)?
 
     private(set) var state: State = .closed(nil)
     private(set) var certificateMismatch = false
@@ -153,8 +156,10 @@ final class AtvRemoteSession {
         case .imeBatchEdit(let ime, let field):
             imeCounter = ime
             fieldCounter = field
+            onImeFocus?()
         case .imeShow(let text):
             onImeShow?(text)
+            onImeFocus?()
         case .imeKeyInject, .error, .other:
             break
         }

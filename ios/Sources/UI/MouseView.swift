@@ -8,6 +8,8 @@ struct MouseView: View {
     @EnvironmentObject private var prefs: Preferences
     /// Shows "Download link copied" after a tap on Copy link.
     @State private var linkCopied = false
+    /// The guide that serves the receiver from this phone.
+    @State private var showShare = false
     @Environment(\.accent) private var accent
 
     /// The Gyro switch is a preference, so it stays as the user left it after a restart.
@@ -65,6 +67,22 @@ struct MouseView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(RemoteBackground())
+        .sheet(isPresented: Binding(
+            get: { model.linkTyping != .idle },
+            set: { if !$0 { model.closeTypeLink() } }
+        )) {
+            LinkTypingSheet {
+                model.closeTypeLink()
+                // The sheet closes first, then the guide opens.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { showShare = true }
+            }
+            .environmentObject(model)
+            .themed(prefs: prefs, accent: accent)
+        }
+        .fullScreenCover(isPresented: $showShare) {
+            ReceiverShareView()
+                .themed(prefs: prefs, accent: accent)
+        }
         .onAppear {
             UIApplication.shared.isIdleTimerDisabled = true
             model.setGyro(gyroOn)
@@ -126,9 +144,12 @@ struct MouseView: View {
                         UIPasteboard.general.string = ReceiverDownload.url
                         linkCopied = true
                     }
-                    Button(L10n.t("receiver.link.type")) { model.typeOnBox(ReceiverDownload.url) }
+                    Button(L10n.t("receiver.link.type")) { model.startTypeLink() }
                 }
                 .font(.footnote)
+                // The fallback: the phone serves the file on the Wi-Fi under a short address.
+                Button(L10n.t("receiver.share.open")) { showShare = true }
+                    .font(.footnote)
                 if linkCopied {
                     Text(L10n.t("receiver.link.copied"))
                         .font(.footnote)

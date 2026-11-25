@@ -1,5 +1,9 @@
 package com.tvboxremote.app.ui
 
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.material.icons.filled.Wallpaper
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.core.animateFloatAsState
@@ -116,6 +120,8 @@ fun PreferencesScreen(
                 ThemeRow(prefs.theme) { onChange(prefs.copy(theme = it)) }
                 Hairline()
                 AccentRow(prefs.accent) { onChange(prefs.copy(accent = it)) }
+                Hairline()
+                BackgroundRow(prefs.background) { onChange(prefs.copy(background = it)) }
             }
 
             SectionTitle(R.string.prefs_section_language)
@@ -125,6 +131,10 @@ fun PreferencesScreen(
             GlassCard {
                 ToggleRow(Icons.Filled.Vibration, R.string.prefs_haptics, R.string.prefs_haptics_detail, prefs.haptics) {
                     onChange(prefs.copy(haptics = it))
+                }
+                Hairline()
+                ToggleRow(Icons.AutoMirrored.Filled.VolumeUp, R.string.prefs_sound, R.string.prefs_sound_detail, prefs.pressSound) {
+                    onChange(prefs.copy(pressSound = it))
                 }
                 Hairline()
                 ToggleRow(Icons.Filled.WbSunny, R.string.prefs_screen_on, R.string.prefs_screen_on_detail, prefs.keepScreenOn) {
@@ -493,6 +503,105 @@ private fun FitText(text: String, color: Color, fontWeight: FontWeight, modifier
 }
 
 private fun androidx.compose.ui.geometry.Size.toRect() = androidx.compose.ui.geometry.Rect(Offset.Zero, this)
+
+// ---------------------------------------------------------------- background
+
+private val backgroundNames = mapOf(
+    BackgroundTexture.GRADIENT to R.string.background_gradient,
+    BackgroundTexture.LEATHER to R.string.background_leather,
+    BackgroundTexture.SATIN to R.string.background_satin,
+)
+
+/** Background: three tiles. Each tile shows the texture on the dark theme (left half) and the light theme (right half). */
+@Composable
+private fun BackgroundRow(selected: BackgroundTexture, onSelect: (BackgroundTexture) -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconTile(Icons.Filled.Wallpaper)
+            Spacer(Modifier.width(14.dp))
+            RowTexts(stringResource(R.string.prefs_background), stringResource(backgroundNames.getValue(selected)))
+        }
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            BackgroundTexture.entries.forEach { texture ->
+                BackgroundTile(texture, texture == selected) { onSelect(texture) }
+            }
+        }
+    }
+}
+
+private val SampleShape = RoundedCornerShape(14.dp)
+
+@Composable
+private fun RowScope.BackgroundTile(texture: BackgroundTexture, selected: Boolean, onClick: () -> Unit) {
+    val textures = rememberBackgroundTextures()
+    val name = stringResource(backgroundNames.getValue(texture))
+    val dark = Palette.isDark
+    Column(
+        Modifier
+            .weight(1f)
+            .clip(TileShape)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+            .semantics { contentDescription = name }
+            .padding(2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box {
+            Canvas(
+                Modifier
+                    .fillMaxWidth()
+                    .height(76.dp)
+                    .clip(SampleShape)
+                    .clearAndSetSemantics { },
+            ) {
+                // A window into a phone-size background at its real scale: the dark theme on the left half,
+                // the light theme on the right half.
+                val screen = Size(360.dp.toPx(), 760.dp.toPx())
+                val origin = Offset(screen.width * 0.35f, screen.height * 0.3f)
+                val half = size.width / 2f
+                clipRect(right = half) {
+                    drawAppBackground(textures, screen, origin, ThemeColors.Dark, AccentColors.of(AccentChoice.BLUE, true).accent, texture)
+                }
+                clipRect(left = half) {
+                    drawAppBackground(textures, screen, origin, ThemeColors.Light, AccentColors.of(AccentChoice.BLUE, false).accent, texture)
+                }
+                drawLine(Color.Black.copy(alpha = 0.25f), Offset(half, 0f), Offset(half, size.height), 1.dp.toPx())
+            }
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .border(
+                        if (selected) 2.dp else 1.dp,
+                        when {
+                            selected -> Palette.accent
+                            dark -> Color.White.copy(alpha = 0.10f)
+                            else -> Color.Black.copy(alpha = 0.10f)
+                        },
+                        SampleShape,
+                    )
+            )
+            if (selected) {
+                Box(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(5.dp)
+                        .size(20.dp)
+                        .background(Palette.accent, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Filled.Check, contentDescription = null, tint = Palette.onAccent, modifier = Modifier.size(14.dp))
+                }
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        FitText(
+            name,
+            color = if (selected) Palette.onSurface else Palette.muted,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            modifier = Modifier.clearAndSetSemantics { },
+        )
+    }
+}
 
 private val wheelDark = listOf(0xFFFF5A5F, 0xFFFFD04A, 0xFF5BD495, 0xFF4FD1FF, 0xFF6F7BFF, 0xFFE85AFF, 0xFFFF5A5F).map(::Color)
 private val wheelLight = listOf(0xFFC9272D, 0xFF9A6A00, 0xFF127A46, 0xFF0B7285, 0xFF2563EB, 0xFF9C36B5, 0xFFC9272D).map(::Color)

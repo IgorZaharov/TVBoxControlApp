@@ -108,6 +108,9 @@ object RemoteWidget {
     /** StackView puts each card in a frame with this padding on every side. */
     private const val FRAME_PADDING_DP = 4f
 
+    /** The height of the "Cannot reach" line on the card. */
+    private const val MESSAGE_DP = 15f
+
     /** A widget lower than this uses the compact card: the D-pad on the left, the other buttons on the right. */
     private const val COMPACT_HEIGHT_DP = 150f
 
@@ -139,14 +142,15 @@ object RemoteWidget {
         val context = appContext.withAppLanguage()
         val devices = usableDevices(context)
         val options = manager.getAppWidgetOptions(id)
-        val compact = widgetSize(context, options).height < COMPACT_HEIGHT_DP
+        val size = widgetSize(context, options)
+        val compact = size.height < COMPACT_HEIGHT_DP
         val views = when {
             devices.isEmpty() -> emptyCard(context)
             devices.size >= 2 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-                stack(context, id, devices, options, compact)
+                stack(context, id, devices, size, compact)
             else -> {
                 val index = prefs(context).getInt("index_$id", 0).mod(devices.size)
-                singleCard(context, id, devices[index], canCycle = devices.size >= 2, compact = compact)
+                singleCard(context, id, devices[index], canCycle = devices.size >= 2, compact = compact, size = size)
             }
         }
         manager.updateAppWidget(id, views)
@@ -213,8 +217,15 @@ object RemoteWidget {
         }
 
     /** The card of one device with its own click intents (one card, no stack). */
-    private fun singleCard(context: Context, widgetId: Int, device: SavedDevice, canCycle: Boolean, compact: Boolean): RemoteViews {
-        val views = card(context, device, compact)
+    private fun singleCard(
+        context: Context,
+        widgetId: Int,
+        device: SavedDevice,
+        canCycle: Boolean,
+        compact: Boolean,
+        size: SizeDp,
+    ): RemoteViews {
+        val views = card(context, device, compact, size)
         BUTTONS.forEach { (viewId, key) ->
             val intent = WidgetPressService.intent(context)
                 .setAction(ACTION_KEY)
@@ -244,13 +255,12 @@ object RemoteWidget {
 
     /** The card stack: one card per device. Each button fills in its device and key into one broadcast template. */
     @RequiresApi(Build.VERSION_CODES.S)
-    private fun stack(context: Context, widgetId: Int, devices: List<SavedDevice>, options: Bundle?, compact: Boolean): RemoteViews {
-        val size = widgetSize(context, options)
+    private fun stack(context: Context, widgetId: Int, devices: List<SavedDevice>, size: SizeDp, compact: Boolean): RemoteViews {
         val items = RemoteViews.RemoteCollectionItems.Builder()
             .setHasStableIds(true)
             .setViewTypeCount(1)
         devices.forEach { device ->
-            val card = card(context, device, compact)
+            val card = card(context, device, compact, size)
             BUTTONS.forEach { (viewId, key) ->
                 card.setOnClickFillInIntent(viewId, Intent().putExtra(EXTRA_DEVICE, device.id).putExtra(EXTRA_KEY, key.name))
             }
@@ -288,13 +298,15 @@ object RemoteWidget {
     }
 
     /** The card content of one device, without click intents. */
-    private fun card(context: Context, device: SavedDevice, compact: Boolean): RemoteViews =
+    private fun card(context: Context, device: SavedDevice, compact: Boolean, size: SizeDp): RemoteViews =
         RemoteViews(context.packageName, if (compact) R.layout.widget_card_compact else R.layout.widget_card).apply {
             setTextViewText(R.id.w_name, device.name)
-            if (failureShown(context, device.id)) {
+            val failed = failureShown(context, device.id)
+            if (failed) {
                 setTextViewText(R.id.w_message, context.getString(R.string.widget_cannot_reach, device.name))
                 setViewVisibility(R.id.w_message, View.VISIBLE)
             }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) sizeDpad(context, this, compact, size, failed)
             setContentDescription(R.id.w_up, context.getString(R.string.key_up))
             setContentDescription(R.id.w_down, context.getString(R.string.key_down))
             setContentDescription(R.id.w_left, context.getString(R.string.key_left))
@@ -306,6 +318,36 @@ object RemoteWidget {
             setContentDescription(R.id.w_open, context.getString(R.string.widget_open_app))
             setContentDescription(R.id.w_next, context.getString(R.string.widget_next_device))
         }
+
+    /**
+     * Sizes the D-pad buttons to the D-pad cells. Each cell is a third of the D-pad, which is the card minus the
+     * paddings in widget_card.xml and widget_card_compact.xml. The whole cell takes the press.
+     */
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun sizeDpad(context: Context, views: RemoteViews, compact: Boolean, size: SizeDp, messageShown: Boolean) {
+        val (padW, padH) = if (compact) {
+            // Card padding 8 + 8, the gap 8 to the right side, the ring padding 2 + 2. The D-pad is 5 of 11 parts.
+            ((size.width - 24f) * 5f / 11f - 4f) to (size.height - 16f - 4f)
+        } else {
+            // Card padding 12 + 12, the header 32, the gap 4, the ring padding 2 + 2. The D-pad is 3 of 4 parts.
+            val message = if (messageShown) MESSAGE_DP else 0f
+            ((size.width - 32f) * 3f / 4f - 4f) to (size.height - 24f - 32f - 4f - 4f - message)
+        }
+        val cell = minOf(padW, padH) / 3f
+        val arrow = (cell * 0.92f).coerceIn(28f, 88f)
+        val ok = (cell * 0.98f).coerceIn(34f, 96f)
+        val dip = TypedValue.COMPLEX_UNIT_DIP
+        val density = context.resources.displayMetrics.density
+        val iconPad = (arrow * 0.24f * density).toInt()
+        listOf(R.id.w_up_btn, R.id.w_down_btn, R.id.w_left_btn, R.id.w_right_btn).forEach {
+            views.setViewLayoutWidth(it, arrow, dip)
+            views.setViewLayoutHeight(it, arrow, dip)
+            views.setViewPadding(it, iconPad, iconPad, iconPad, iconPad)
+        }
+        views.setViewLayoutWidth(R.id.w_ok_btn, ok, dip)
+        views.setViewLayoutHeight(R.id.w_ok_btn, ok, dip)
+        views.setTextViewTextSize(R.id.w_ok_btn, dip, (ok * 0.26f).coerceIn(11f, 20f))
+    }
 
     private data class SizeDp(val width: Float, val height: Float)
 

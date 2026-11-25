@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             val prefs by vm.preferences.collectAsState()
-            RemoteTheme(prefs.theme, prefs.accent) {
+            RemoteTheme(prefs.theme, prefs.accent, prefs.background) {
                 // Dark icons on the light theme, light icons on the dark theme.
                 val dark = Palette.isDark
                 LaunchedEffect(dark) {
@@ -134,6 +134,9 @@ private fun App(vm: MainViewModel) {
     val snackbar = remember { SnackbarHostState() }
 
     Haptics.enabled = prefs.haptics
+    Haptics.sound = prefs.pressSound
+    val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
+    LaunchedEffect(prefs.pressSound) { if (prefs.pressSound) Haptics.loadSound(appContext) }
 
     LaunchedEffect(Unit) { vm.messages.collect { snackbar.showSnackbar(it) } }
     LaunchedEffect(Unit) { vm.openKeyboard.collect { if (vm.isConnected) keyboardOpen = true } }

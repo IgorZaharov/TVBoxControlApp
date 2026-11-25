@@ -54,6 +54,12 @@ struct PreferencesView: View {
                 AccentPicker(selection: $prefs.accent)
             }
             .padding(14)
+            GlassDivider()
+            VStack(alignment: .leading, spacing: 14) {
+                rowTitle(systemImage: "photo", title: L10n.t("prefs.background"))
+                BackgroundPicker(selection: $prefs.background)
+            }
+            .padding(14)
         }
     }
 
@@ -95,6 +101,13 @@ struct PreferencesView: View {
                 title: L10n.t("prefs.haptics"),
                 detail: L10n.t("prefs.haptics.detail"),
                 isOn: $prefs.haptics
+            )
+            GlassDivider()
+            toggleRow(
+                systemImage: "speaker.wave.2",
+                title: L10n.t("prefs.pressSound"),
+                detail: L10n.t("prefs.pressSound.detail"),
+                isOn: $prefs.pressSound
             )
             GlassDivider()
             toggleRow(

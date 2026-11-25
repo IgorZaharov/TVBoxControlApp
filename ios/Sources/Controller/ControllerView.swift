@@ -63,7 +63,7 @@ struct ControllerView: View {
         controller.output = ControllerModel.Output(
             key: { code, down in model.controllerKey(code, down: down) },
             pointer: { dx, dy in model.controllerPointer(dx: dx, dy: dy) },
-            haptic: { Haptics.tick(enabled: prefs.haptics) },
+            haptic: { Haptics.press(prefs) },
             exit: { model.closeController() }
         )
     }

@@ -198,6 +198,7 @@ extension View {
     func themed(prefs: Preferences, accent: AccentPalette) -> some View {
         self
             .environment(\.accent, accent)
+            .environment(\.backgroundTexture, prefs.background)
             .tint(accent.accent)
             .environmentObject(prefs)
             .preferredColorScheme(prefs.theme.colorScheme)

@@ -48,7 +48,7 @@ struct MediaKeysSheet: View {
             }
         } else {
             Button {
-                Haptics.tick(enabled: prefs.haptics)
+                Haptics.press(prefs)
                 model.press(key)
             } label: {
                 Image(systemName: key.symbol)

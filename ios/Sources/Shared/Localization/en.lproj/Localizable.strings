@@ -265,7 +265,35 @@
 "widget.intent.next" = "Next TV box";
 
 /* Receiver download link (Mouse screen) */
-"receiver.link.hint" = "On the box, open a browser and select the address bar. Then type the link from here, or paste the copied link.";
+"receiver.link.hint" = "Install the receiver on the box: let the phone type the download link into the box, or download it from this phone.";
 "receiver.link.copy" = "Copy link";
 "receiver.link.type" = "Type link on the box";
 "receiver.link.copied" = "Download link copied";
+
+/* Preferences: press sound and background */
+"prefs.pressSound" = "Press sound";
+"prefs.pressSound.detail" = "A soft tap when you press a button. The silent switch mutes it.";
+"prefs.background" = "Background";
+"prefs.background.gradient" = "Gradient";
+"prefs.background.leather" = "Leather";
+"prefs.background.satin" = "Satin";
+
+/* Receiver install: type the link, or download from this phone */
+"receiver.share.open" = "Download from this phone";
+"receiver.share.title" = "Install the receiver";
+"receiver.share.loading" = "Getting the receiver…";
+"receiver.share.type" = "On the box, type this address:";
+"receiver.share.fullAddress" = "If the app asks for a full address, type %@";
+"receiver.share.waiting" = "Waiting for the box…";
+"receiver.share.done" = "The box downloaded the receiver.";
+"receiver.share.noWifi" = "Connect the phone to the same Wi-Fi network as the box.";
+"receiver.share.failed" = "Cannot get the receiver. Make sure that the phone has internet, then try again.";
+"receiver.share.step1" = "On the box, open the Play Store and install the free app Downloader (by AFTVnews). A browser also works.";
+"receiver.share.step2" = "Open Downloader. Select the address field, type the address above, then select Go.";
+"receiver.share.step3" = "When the download ends, select Install. If the box asks, allow Downloader to install unknown apps.";
+"receiver.share.step4" = "Open TVBox Remote Receiver on the box and turn on the mouse service.";
+"receiver.share.keep" = "Keep this screen open until the download ends. The phone and the box must be on the same Wi-Fi network.";
+"link.typing.title" = "Type the link on the box";
+"link.typing.wait" = "On the box, open a browser or Downloader and select the address field. When the box keyboard opens, the phone types the link and presses Enter.\n\nIf the box keyboard is open already, close it with Back and select the field again.";
+"link.typing.done" = "The phone typed the link and pressed Enter. If the field on the box stays empty, that app does not take text from the phone. Then download the receiver from this phone.";
+"link.typing.noKeyboard" = "The box keyboard did not open. Select the address field on the box and try again, or download the receiver from this phone.";

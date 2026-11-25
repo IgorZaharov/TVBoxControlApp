@@ -24,6 +24,33 @@ enum ThemeChoice: String, CaseIterable, Identifiable {
     }
 }
 
+/// The Background preference. Default: the gradient, as in the first version of the app.
+enum BackgroundTexture: String, CaseIterable, Identifiable {
+    case gradient, leather, satin
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .gradient: return L10n.t("prefs.background.gradient")
+        case .leather: return L10n.t("prefs.background.leather")
+        case .satin: return L10n.t("prefs.background.satin")
+        }
+    }
+}
+
+private struct BackgroundTextureKey: EnvironmentKey {
+    static let defaultValue = BackgroundTexture.gradient
+}
+
+extension EnvironmentValues {
+    /// The Background preference. The app root sets it.
+    var backgroundTexture: BackgroundTexture {
+        get { self[BackgroundTextureKey.self] }
+        set { self[BackgroundTextureKey.self] = newValue }
+    }
+}
+
 /// The Accent preference.
 enum AccentChoice: String, CaseIterable, Identifiable {
     case blue, green, orange, red, rgb

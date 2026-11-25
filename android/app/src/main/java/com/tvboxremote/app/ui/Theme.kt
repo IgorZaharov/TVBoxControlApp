@@ -30,6 +30,9 @@ import kotlinx.coroutines.delay
 /** The theme choice in Preferences. Default: dark. */
 enum class ThemeMode { SYSTEM, DARK, LIGHT }
 
+/** The background choice in Preferences. Default: the gradient, as in the first version of the app. */
+enum class BackgroundTexture { GRADIENT, LEATHER, SATIN }
+
 /** The accent choice in Preferences. Default: blue. */
 enum class AccentChoice { BLUE, GREEN, ORANGE, RED, RAINBOW }
 
@@ -115,6 +118,10 @@ data class AccentColors(val accent: Color, val okTop: Color, val okBottom: Color
 object Palette {
     internal var theme by mutableStateOf(ThemeColors.Dark)
     internal var accentColors by mutableStateOf(AccentColors.of(AccentChoice.BLUE, true))
+
+    /** The texture of the app background (Preferences, Background). */
+    var texture by mutableStateOf(BackgroundTexture.GRADIENT)
+        internal set
 
     val isDark: Boolean get() = theme.isDark
     val background: Color get() = theme.background
@@ -207,7 +214,12 @@ private const val RAINBOW_CYCLE_MS = 8_000L
 private const val RAINBOW_REST_HUE = 220f
 
 @Composable
-fun RemoteTheme(mode: ThemeMode = ThemeMode.DARK, accent: AccentChoice = AccentChoice.BLUE, content: @Composable () -> Unit) {
+fun RemoteTheme(
+    mode: ThemeMode = ThemeMode.DARK,
+    accent: AccentChoice = AccentChoice.BLUE,
+    texture: BackgroundTexture = BackgroundTexture.GRADIENT,
+    content: @Composable () -> Unit,
+) {
     val dark = when (mode) {
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
         ThemeMode.DARK -> true
@@ -237,6 +249,7 @@ fun RemoteTheme(mode: ThemeMode = ThemeMode.DARK, accent: AccentChoice = AccentC
     // RemoteTheme is the root, so nothing has read these states yet in this composition.
     if (Palette.theme != theme) Palette.theme = theme
     if (Palette.accentColors != accentColors) Palette.accentColors = accentColors
+    if (Palette.texture != texture) Palette.texture = texture
 
     val scheme = if (dark) {
         darkColorScheme(

@@ -1,6 +1,5 @@
 package com.tvboxremote.app.ui
 
-import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.background
@@ -282,7 +281,7 @@ private fun Modifier.holdPress(label: String, anim: PressAnimation, onChange: (B
         .pointerInput(anim) {
             awaitEachGesture {
                 awaitFirstDown(requireUnconsumed = false)
-                if (Haptics.enabled) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                Haptics.press(view)
                 scope.launch { anim.down() }
                 current(true)
                 try {
@@ -378,7 +377,7 @@ private fun GameStick(label: String, enabled: Boolean, stick: Stick, actions: Co
                 awaitEachGesture {
                     // The point where the finger lands is the center, so a tap does not move the stick.
                     val down = awaitFirstDown(requireUnconsumed = false)
-                    if (Haptics.enabled) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    Haptics.press(view)
                     scope.launch { touch.flash() }
                     var maxMove = 0f
                     var clicked = false
@@ -445,7 +444,7 @@ private fun GameDpad(actions: ControllerActions) {
                 val radius = size.width / 2f
                 fun set(arrows: Set<Direction>) {
                     if (arrows == active) return
-                    if ((arrows - active).isNotEmpty() && Haptics.enabled) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    if ((arrows - active).isNotEmpty()) Haptics.press(view)
                     (arrows - active).forEach { d -> scope.launch { anims.getValue(d).down() } }
                     (active - arrows).forEach { d -> scope.launch { anims.getValue(d).up() } }
                     active = arrows

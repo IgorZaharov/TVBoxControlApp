@@ -31,11 +31,13 @@ The receiver is not in an app store. The newest signed receiver is always at thi
 https://github.com/IgorZaharov/TVBoxControlApp/releases/latest/download/receiver.apk
 ```
 
-To install it without a computer:
+To install it without a computer, open TVBox Remote on the phone, then the mouse screen. It offers two ways:
 
-1. On the box, open a browser (or an app that downloads files from a link) and select the address bar.
-2. On the phone, open TVBox Remote, then the mouse screen. Select "Type link on the box". The phone types the link into the address bar. You can also select "Copy link" and paste it.
-3. Download the file and open it. If the box asks, allow the browser to install unknown apps.
+- Download from this phone. The phone serves the receiver on the Wi-Fi under a short address, for example `192.168.1.23:8080`, and shows the steps:
+  1. On the box, install the free app Downloader (by AFTVnews) from the Play Store. A browser also works.
+  2. In Downloader, type the address from the phone and select Go.
+  3. Select Install. If the box asks, allow Downloader to install unknown apps.
+- Type link on the box. On the box, select the address field of a browser or Downloader. When the box keyboard opens, the phone types the link above and presses Enter. Some apps do not take text from the phone. Then use the first way.
 
 Install it from a computer with ADB (Android Debug Bridge):
 

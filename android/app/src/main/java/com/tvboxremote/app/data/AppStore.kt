@@ -2,6 +2,7 @@ package com.tvboxremote.app.data
 
 import android.content.Context
 import com.tvboxremote.app.ui.AccentChoice
+import com.tvboxremote.app.ui.BackgroundTexture
 import com.tvboxremote.app.ui.ThemeMode
 import com.tvboxremote.app.widget.SavedDevice
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 data class Preferences(
     val haptics: Boolean = true,
+    /** A soft tap sound on each button press. Default off. */
+    val pressSound: Boolean = false,
     val gyroSpeed: Float = 1f,
     val touchpadSpeed: Float = 1f,
     val keepScreenOn: Boolean = false,
@@ -17,6 +20,7 @@ data class Preferences(
     val gyroEnabled: Boolean = true,
     val theme: ThemeMode = ThemeMode.DARK,
     val accent: AccentChoice = AccentChoice.BLUE,
+    val background: BackgroundTexture = BackgroundTexture.GRADIENT,
 )
 
 /** What the app keeps between starts: pairings, receiver tokens, the last box, and preferences. */
@@ -28,23 +32,28 @@ class AppStore(context: Context) {
 
     private fun loadPreferences() = Preferences(
         haptics = prefs.getBoolean("p_haptics", true),
+        pressSound = prefs.getBoolean("p_sound", false),
         gyroSpeed = prefs.getFloat("p_gyro", 1f),
         touchpadSpeed = prefs.getFloat("p_touch", 1f),
         keepScreenOn = prefs.getBoolean("p_screen", false),
         gyroEnabled = prefs.getBoolean("p_gyro_on", true),
         theme = ThemeMode.entries.firstOrNull { it.name == prefs.getString("p_theme", null) } ?: ThemeMode.DARK,
         accent = AccentChoice.entries.firstOrNull { it.name == prefs.getString("p_accent", null) } ?: AccentChoice.BLUE,
+        background = BackgroundTexture.entries.firstOrNull { it.name == prefs.getString("p_background", null) }
+            ?: BackgroundTexture.GRADIENT,
     )
 
     fun updatePreferences(p: Preferences) {
         prefs.edit()
             .putBoolean("p_haptics", p.haptics)
+            .putBoolean("p_sound", p.pressSound)
             .putFloat("p_gyro", p.gyroSpeed)
             .putFloat("p_touch", p.touchpadSpeed)
             .putBoolean("p_screen", p.keepScreenOn)
             .putBoolean("p_gyro_on", p.gyroEnabled)
             .putString("p_theme", p.theme.name)
             .putString("p_accent", p.accent.name)
+            .putString("p_background", p.background.name)
             .apply()
         _preferences.value = p
     }

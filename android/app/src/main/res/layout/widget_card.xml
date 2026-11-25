@@ -67,6 +67,8 @@
         android:baselineAligned="false"
         android:orientation="horizontal">
 
+        <!-- The D-pad. The sizes here are for Android 9 to 11 and the widget preview. On Android 12 and later,
+             RemoteWidget sizes the buttons to the cells. -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -75,112 +77,136 @@
             android:orientation="vertical"
             android:padding="2dp">
             <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:baselineAligned="false"
-            android:orientation="horizontal">
-            <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1" /><FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-                <ImageView
-                android:id="@+id/w_up"
-                android:contentDescription="@string/key_up"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_gravity="center"
-                android:background="@drawable/widget_btn"
-                android:padding="9dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_w_up" />
-            </FrameLayout><FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1" />
-        </LinearLayout>
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+                <FrameLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+                <FrameLayout
+                    android:id="@+id/w_up"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/key_up">
+                    <ImageView
+                        android:id="@+id/w_up_btn"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/widget_btn"
+                        android:duplicateParentState="true"
+                        android:importantForAccessibility="no"
+                        android:padding="10dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_w_up" />
+                </FrameLayout>
+                <FrameLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+            </LinearLayout>
+
             <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:baselineAligned="false"
-            android:orientation="horizontal">
-            <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-                <ImageView
-                android:id="@+id/w_left"
-                android:contentDescription="@string/key_left"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_gravity="center"
-                android:background="@drawable/widget_btn"
-                android:padding="9dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_w_left" />
-            </FrameLayout><FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-                <TextView
-                android:id="@+id/w_ok"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center"
-                android:background="@drawable/widget_btn_ok"
-                android:gravity="center"
-                android:text="@string/key_ok"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-            </FrameLayout><FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-                <ImageView
-                android:id="@+id/w_right"
-                android:contentDescription="@string/key_right"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_gravity="center"
-                android:background="@drawable/widget_btn"
-                android:padding="9dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_w_right" />
-            </FrameLayout>
-        </LinearLayout>
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+                <FrameLayout
+                    android:id="@+id/w_left"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/key_left">
+                    <ImageView
+                        android:id="@+id/w_left_btn"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/widget_btn"
+                        android:duplicateParentState="true"
+                        android:importantForAccessibility="no"
+                        android:padding="10dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_w_left" />
+                </FrameLayout>
+                <FrameLayout
+                    android:id="@+id/w_ok"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/key_ok">
+                    <TextView
+                        android:id="@+id/w_ok_btn"
+                        android:layout_width="54dp"
+                        android:layout_height="54dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/widget_btn_ok"
+                        android:duplicateParentState="true"
+                        android:gravity="center"
+                        android:importantForAccessibility="no"
+                        android:text="@string/key_ok"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+                <FrameLayout
+                    android:id="@+id/w_right"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/key_right">
+                    <ImageView
+                        android:id="@+id/w_right_btn"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/widget_btn"
+                        android:duplicateParentState="true"
+                        android:importantForAccessibility="no"
+                        android:padding="10dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_w_right" />
+                </FrameLayout>
+            </LinearLayout>
+
             <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:baselineAligned="false"
-            android:orientation="horizontal">
-            <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1" /><FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-                <ImageView
-                android:id="@+id/w_down"
-                android:contentDescription="@string/key_down"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_gravity="center"
-                android:background="@drawable/widget_btn"
-                android:padding="9dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_w_down" />
-            </FrameLayout><FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1" />
-        </LinearLayout>
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+                <FrameLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+                <FrameLayout
+                    android:id="@+id/w_down"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/key_down">
+                    <ImageView
+                        android:id="@+id/w_down_btn"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/widget_btn"
+                        android:duplicateParentState="true"
+                        android:importantForAccessibility="no"
+                        android:padding="10dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_w_down" />
+                </FrameLayout>
+                <FrameLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout

@@ -29,7 +29,7 @@ The default theme is dark. The values in this table are the dark theme with the 
 
 - Round buttons are 72 pt (dp) in diameter. The icon is 30 pt.
 - The D-pad is a ring of 264 pt. The OK button in the center is 104 pt.
-- A press gives a short haptic tick (if haptics are on) and shows `surfacePressed`.
+- A press gives a short haptic tick (if haptics are on), a soft tap sound (if the press sound is on), and shows `surfacePressed`.
 - Arrow buttons, volume up, and volume down repeat while you hold them: first repeat after 400 ms, then every 110 ms.
 
 ## Themes and accents
@@ -117,7 +117,12 @@ The app background has four layers, from bottom to top:
 
 1. A vertical gradient from `#16181D` (top) to `#0A0B0E` (bottom).
 2. A soft radial light at the top center: accent color at 7% opacity, radius 70% of the screen width.
-3. A slight pebble leather: a seamless 384 × 384 px tile, shown at 128 × 128 pt (dp), repeated over the screen. Light comes from the top left: the pebble tops have white highlights (at most 8%), the grooves between them are black (at most 20%). Dark theme: the tile at full strength. Light theme: the tile at 55%. The file is `leather_grain.png` on Android and `LeatherGrain` on iOS. `tools/make_leather.py` makes it.
+3. The texture of the Background preference:
+   - Gradient (default): no texture. The background is the gradient, the accent light and the grain, as in the first version of the app.
+   - Leather: a slight pebble leather, described below.
+   - Satin: soft satin folds that run from the top left to the bottom right, with a broad sheen on the ridges. The image is 600 × 1300 px and is not a tile: it fills the screen (scaled to fill, the rest cropped), so the folds never repeat. White sheen at most 22%, black fold shadows at most 30%. Dark theme: full strength. Light theme: 70%. The file is `satin_folds.png` on Android and `SatinFolds` on iOS. `tools/make_satin.py` makes it.
+
+   The leather is a seamless 384 × 384 px tile, shown at 128 × 128 pt (dp), repeated over the screen. Light comes from the top left: the pebble tops have white highlights (at most 8%), the grooves between them are black (at most 20%). Dark theme: the tile at full strength. Light theme: the tile at 55%. The file is `leather_grain.png` on Android and `LeatherGrain` on iOS. `tools/make_leather.py` makes it.
 4. A fine grain: a 128 × 128 px noise tile, generated once in code, repeated over the screen. Each pixel is white or black at 0 to 4% opacity. The grain is fixed and does not move.
 
 All screens use this background: Remote, Controller, Preferences, Devices, Mouse, Help and About. Sheets and dialogs use the plain `surface` color.
@@ -212,6 +217,7 @@ The widget is a small remote for the home screen.
 Android:
 
 - Two widgets in the widget list: "TVBox Remote" (default 3 × 3 cells) and "TVBox Remote, compact" (4 × 2 cells: the D-pad on the left, the name, Power, Back and Home on the right, as the iPhone medium widget). You can resize both. A widget lower than 150 dp uses the compact card.
+- The D-pad buttons fill their cells: Android 12 and later size each arrow to 92 % and OK to 98 % of a third of the D-pad. The whole cell takes the press, not only the round button.
 - A press shows on the button: an accent ripple, the flipped gradient and a 2 dp accent ring (white on OK). A widget cannot draw the press glow of the app.
 - A press starts a short foreground service that sends the key. Android blocks the network of a closed app in the background, so a plain broadcast waited until the app opened. The service stops 8 s after the last press, before Android shows its notification (after about 10 s).
 - With two or more saved devices (Android 12 and later), swipe up or down on the widget to go to the next device. The devices are a card stack.
@@ -356,7 +362,19 @@ A grid of round buttons: Previous, Rewind, Play/Pause, Fast forward, Next, Chann
   - Two-finger drag: scroll.
 - Bottom row: Back, a wide "Click" button, Home.
 - The screen stays on while it is open. The gyro runs only while this screen is open.
-- If no mouse transport is available, the screen shows: "Install TVBox Remote Receiver on your box to use the mouse over Wi-Fi." (On Android, it adds: "Or connect with Bluetooth.")
+- If no mouse transport is available, the screen shows: "Install TVBox Remote Receiver on your box to use the mouse over Wi-Fi." (On Android, it adds: "Or connect with Bluetooth.") With a Wi-Fi box, it also shows the receiver install options (see "Receiver install").
+
+### Receiver install
+
+The receiver is not in an app store. The Mouse screen offers three ways to get it on the box:
+
+- Copy link: copies `https://github.com/IgorZaharov/TVBoxControlApp/releases/latest/download/receiver.apk`.
+- Type link on the box (Wi-Fi box only): the box takes text from the phone only for the field that has the focus while the box keyboard is open. So the phone waits up to 60 s for the box to report a field (a batch edit or an IME show request), then types the link into it and sends Enter. A dialog says what to do on the box, with a spinner while the phone waits. It ends with "typed" or "the box keyboard did not open". While the phone waits, the phone keyboard sheet does not open. Some apps on the box do not take text from the phone; then the field stays empty.
+- Download from this phone: the phone downloads receiver.apk from GitHub (or uses the copy from an earlier download), and serves it on the Wi-Fi on port 8080 (8000, 8888 or 8081 to 8099 if 8080 is in use). Every path gets the APK as an attachment named receiver.apk, so the address alone works. A full screen shows:
+  - The address, for example `192.168.1.23:8080`, in 40 pt bold monospace in the accent color, and the full `http://` form under it.
+  - Four numbered steps: install Downloader from the Play Store (or use a browser), type the address and select Go, select Install and allow unknown apps, then open the receiver and turn on the mouse service.
+  - "Waiting for the box…", then "The box downloaded the receiver." after a full download.
+  - The phone and the box must be on the same Wi-Fi network. The screen stays on while it is open, and the server stops when it closes.
 
 ## Preferences
 
@@ -384,12 +402,14 @@ Five cards, each with a small section title above it (13 pt, semibold, muted, up
 1. Appearance
    - Theme: System, Dark or Light. Default Dark. A segmented control in a glass track (a pill, 44 pt high). Each segment has an icon (auto, moon, sun) and a label. The selected segment is a raised body (see "Raised buttons") with a 1.5 pt accent border.
    - Accent color: Blue, Green, Orange, Red or RGB. Default Blue. See "Accent picker".
+   - Background: Gradient, Leather or Satin. Default Gradient. Three tiles in one row. Each tile shows a sample of the background at its real scale, as a window into a phone-size screen: the dark theme on the left half and the light theme on the right half, so both themes show at once. The name is under the sample. The selected tile has a 2 pt accent border and the check badge of the accent picker.
 2. Language
    - App language: System, English or Українська. Default System (the language of the phone). The row shows the current choice under its title and a chevron on the right. Language names always show in their own language.
    - Android: a tap opens a dialog with the three choices as radio buttons. The app uses the per-app language of Android (AppCompat on Android 12 and earlier), so the choice also shows in the system settings. After a change, the screen reloads in the new language and stays on Preferences. On Android 12 and earlier, a home screen widget that updates before the app opens after a restart shows the phone language until the app opens.
    - iOS: iOS keeps the per-app language in the Settings app. A tap opens the page of the app in Settings. The row shows the language that the app uses now.
 3. Remote
    - Haptics (on or off). Default on.
+   - Press sound (on or off). Default off. A soft tap of 35 ms on each button press (`tap.wav`, made by `tools/make_tap.py`, peak -12 dBFS). Android plays it at half of the system sound volume (SoundPool, sonification). iOS plays it as a system sound. Silent mode mutes it on both.
    - Keep screen on while the remote is open. Default off.
 4. Pointer
    - Gyro speed: slider from 0.5 to 3.0. Default 1.0.

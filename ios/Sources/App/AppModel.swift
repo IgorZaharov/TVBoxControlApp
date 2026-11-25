@@ -68,6 +68,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var volume: VolumeInfo?
     @Published private(set) var boxIsOn: Bool?
     @Published var keyboardText = ""
+    /// "Type link on the box" on the mouse screen.
+    @Published private(set) var linkTyping: LinkTyping = .idle
     @Published var alertMessage: String?
 
     let prefs = Preferences()
@@ -311,6 +313,9 @@ final class AppModel: ObservableObject {
         session.onImeShow = { [weak self] text in
             self?.imeShown(text)
         }
+        session.onImeFocus = { [weak self] in
+            self?.imeFocused()
+        }
         self.session = session
         connectionState = .connecting
         session.connect()
@@ -426,12 +431,46 @@ final class AppModel: ObservableObject {
         showMouse = false
     }
 
-    /// Types `text` into the focused text field on the box, for example the receiver link into the address bar
-    /// of a browser.
-    func typeOnBox(_ text: String) {
-        guard connectionState == .connected else { return }
-        session?.sendText(text)
-        signals.send()
+    // MARK: - Type the receiver link
+
+    /// How long "Type link on the box" waits for the box keyboard.
+    private static let linkWaitNanoseconds: UInt64 = 60_000_000_000
+    private static let enterKey = 66
+    private var linkTimeout: Task<Void, Never>?
+
+    /// Types the receiver link into a text field on the box and presses Enter. The box takes text only for the field
+    /// that has the focus while its keyboard is open, so the phone waits until the user selects the field on the box:
+    /// then the box reports the field (`imeFocused`), and the phone types into it.
+    func startTypeLink() {
+        guard connectionState == .connected, session != nil else { return }
+        linkTimeout?.cancel()
+        linkTyping = .waiting
+        linkTimeout = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: Self.linkWaitNanoseconds)
+            guard !Task.isCancelled, let self, self.linkTyping == .waiting else { return }
+            self.linkTyping = .noKeyboard
+        }
+    }
+
+    func closeTypeLink() {
+        linkTimeout?.cancel()
+        linkTyping = .idle
+    }
+
+    private func imeFocused() {
+        guard linkTyping == .waiting else { return }
+        linkTimeout?.cancel()
+        linkTyping = .sending
+        Task { [weak self] in
+            // The box sends the field and then opens its keyboard. Let both arrive, so the counters are current.
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            guard let self, self.linkTyping == .sending, let session = self.session else { return }
+            session.sendText(ReceiverDownload.url)
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            session.sendKey(Self.enterKey)
+            self.signals.send()
+            self.linkTyping = .typed
+        }
     }
 
     func retryMouse() {
@@ -750,4 +789,9 @@ struct TextChange: Equatable {
         deletes = a.count - common
         insert = String(b[common...])
     }
+}
+
+/// The state of "Type link on the box".
+enum LinkTyping {
+    case idle, waiting, sending, typed, noKeyboard
 }

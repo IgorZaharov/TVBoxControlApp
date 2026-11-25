@@ -1,5 +1,9 @@
 package com.tvboxremote.app.ui
 
+import android.view.View
+import android.media.SoundPool
+import android.media.AudioAttributes
+import android.content.Context
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -66,9 +70,37 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** Haptics on or off for all remote buttons. */
+/** The press feedback of all remote buttons: the haptic tick and the tap sound (Preferences, Remote). */
 object Haptics {
     var enabled: Boolean = true
+    var sound: Boolean = false
+
+    private var pool: SoundPool? = null
+    private var tapId = 0
+    @Volatile private var tapLoaded = false
+
+    /** Loads the tap sound (res/raw/tap.wav, made by tools/make_tap.py). Call it when the sound is turned on. */
+    fun loadSound(context: Context) {
+        if (pool != null) return
+        val attributes = AudioAttributes.Builder()
+            // Button sounds: the system volume. Silent and vibrate mode mute them.
+            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        pool = SoundPool.Builder().setMaxStreams(3).setAudioAttributes(attributes).build().also { p ->
+            p.setOnLoadCompleteListener { _, _, status -> tapLoaded = status == 0 }
+            tapId = p.load(context.applicationContext, R.raw.tap, 1)
+        }
+    }
+
+    /** The feedback of one press. */
+    fun press(view: View) {
+        if (enabled) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        if (sound && tapLoaded) pool?.play(tapId, TAP_VOLUME, TAP_VOLUME, 1, 0, 1f)
+    }
+
+    /** The tap plays at about half of the system volume, so it stays soft. */
+    private const val TAP_VOLUME = 0.5f
 }
 
 /**
@@ -89,7 +121,7 @@ fun Modifier.remotePress(
     val currentOnPress by rememberUpdatedState(onPress)
     val currentPressedChange by rememberUpdatedState(onPressedChange)
     fun fire() {
-        if (Haptics.enabled) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        Haptics.press(view)
         currentOnPress()
     }
     return this

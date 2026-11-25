@@ -1,5 +1,7 @@
 package com.tvboxremote.app
 
+import kotlinx.coroutines.delay
+import com.tvboxremote.app.receiver.ReceiverDownload
 import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothDevice
@@ -65,6 +67,11 @@ private val NO_ERROR = Throwable("none")
 
 /** Automatic reconnects after a lost Wi-Fi link, before the app shows "Connection lost". */
 private const val MAX_RECONNECTS = 3
+
+/** How long "Type link on the box" waits for the box keyboard. */
+private const val LINK_WAIT_MS = 60_000L
+private const val KEYCODE_ENTER = 66
+
 /** The wait before reconnect n is n times this. */
 private const val RECONNECT_DELAY_MS = 1_000L
 /** A link that lasted this long counts as working: a drop after it starts a new series of reconnects. */
@@ -287,7 +294,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 _ui.update { it.copy(link = Link.Connected(box.name, Transport.WIFI)) }
                 if (store.receiverToken(box.host) != null) connectReceiver()
                 launch { s.volume.collect { v -> _ui.update { it.copy(volume = v) } } }
-                launch { s.imeShown.collect { _openKeyboard.trySend(Unit) } }
+                // While the phone waits to type the receiver link, the box keyboard is for the link, not the phone keyboard.
+                launch { s.imeShown.collect { if (_linkTyping.value != LinkTyping.WAITING) _openKeyboard.trySend(Unit) } }
                 val connectedAt = SystemClock.elapsedRealtime()
                 s.closed.collectLatest { reason ->
                     if (reason != null && session === s) {
@@ -509,16 +517,40 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         lastSentText = text
     }
 
+    private val _linkTyping = MutableStateFlow(LinkTyping.IDLE)
+    /** "Type link on the box" on the mouse screen. */
+    val linkTyping: StateFlow<LinkTyping> = _linkTyping.asStateFlow()
+    private var linkJob: Job? = null
+
     /**
-     * Types [text] into the focused text field on the box (Wi-Fi only), for example the receiver link into the
-     * address bar of a browser. Returns false if no Wi-Fi box is connected.
+     * Types the receiver link into a text field on the box (Wi-Fi only) and presses Enter. The box takes text only
+     * for the field that has the focus while its keyboard is open, so the phone waits until the user selects the
+     * field on the box: then the box reports the field, and the phone types into it.
      */
-    fun typeOnBox(text: String): Boolean {
-        val s = session ?: return false
-        if (transport != Transport.WIFI) return false
-        s.sendText(text)
-        signal()
-        return true
+    fun startTypeLink() {
+        val s = session
+        if (s == null || transport != Transport.WIFI) return
+        linkJob?.cancel()
+        _linkTyping.value = LinkTyping.WAITING
+        linkJob = viewModelScope.launch {
+            val focused = withTimeoutOrNull(LINK_WAIT_MS) { s.imeFocus.first() }
+            if (focused == null) {
+                _linkTyping.value = LinkTyping.NO_KEYBOARD
+                return@launch
+            }
+            // The box sends the field and then opens its keyboard. Let both arrive, so the counters are current.
+            delay(400)
+            s.sendText(ReceiverDownload.URL)
+            delay(300)
+            s.sendKey(KEYCODE_ENTER)
+            signal()
+            _linkTyping.value = LinkTyping.TYPED
+        }
+    }
+
+    fun closeTypeLink() {
+        linkJob?.cancel()
+        _linkTyping.value = LinkTyping.IDLE
     }
 
     /** True if the mouse can work now: Bluetooth, or a ready receiver. */
@@ -808,3 +840,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (hasBluetoothConnectPermission() && !WidgetSender.adoptBluetooth()) hid.unregister()
     }
 }
+
+/** The state of "Type link on the box". */
+enum class LinkTyping { IDLE, WAITING, TYPED, NO_KEYBOARD }

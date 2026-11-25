@@ -57,6 +57,13 @@ class AtvRemoteSession(
     /** Emits when the box opens its on-screen keyboard. */
     val imeShown: SharedFlow<Unit> = _imeShown.asSharedFlow()
 
+    private val _imeFocus = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    /**
+     * Emits when a text field on the box gets the focus or the box keyboard opens (a batch edit or an IME show
+     * request). After this, the stored counters belong to that field, and text goes into it.
+     */
+    val imeFocus: SharedFlow<Unit> = _imeFocus.asSharedFlow()
+
     private val _closed = MutableStateFlow<Throwable?>(null)
     /** Set to the reason when the session ends. */
     val closed: StateFlow<Throwable?> = _closed.asStateFlow()
@@ -101,8 +108,12 @@ class AtvRemoteSession(
             m.has(Remote.F_IME_BATCH_EDIT) -> m.message(Remote.F_IME_BATCH_EDIT)?.let {
                 imeCounter = it.int(1)
                 fieldCounter = it.int(2)
+                _imeFocus.tryEmit(Unit)
             }
-            m.has(Remote.F_IME_SHOW_REQUEST) -> _imeShown.tryEmit(Unit)
+            m.has(Remote.F_IME_SHOW_REQUEST) -> {
+                _imeShown.tryEmit(Unit)
+                _imeFocus.tryEmit(Unit)
+            }
             m.has(Remote.F_ERROR) -> Unit // The box reports a bad message. Keep the session.
         }
     }

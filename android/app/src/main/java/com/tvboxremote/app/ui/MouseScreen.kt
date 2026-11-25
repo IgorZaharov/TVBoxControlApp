@@ -1,5 +1,7 @@
 package com.tvboxremote.app.ui
 
+import com.tvboxremote.app.LinkTyping
+import androidx.compose.material3.AlertDialog
 import com.tvboxremote.app.receiver.ReceiverDownload
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -66,6 +68,16 @@ import kotlin.math.abs
 
 @Composable
 fun MouseScreen(vm: MainViewModel, onDone: () -> Unit, onBluetooth: () -> Unit) {
+    var sharing by remember { mutableStateOf(false) }
+    val linkTyping by vm.linkTyping.collectAsState()
+    if (sharing) ReceiverShareScreen(onClose = { sharing = false })
+    if (linkTyping != LinkTyping.IDLE) {
+        LinkTypingDialog(
+            linkTyping,
+            onClose = vm::closeTypeLink,
+            onShare = { vm.closeTypeLink(); sharing = true },
+        )
+    }
     val context = LocalContext.current
     val view = LocalView.current
     val ui by vm.ui.collectAsState()
@@ -146,9 +158,13 @@ fun MouseScreen(vm: MainViewModel, onDone: () -> Unit, onBluetooth: () -> Unit) 
                     )
                 }
             } else {
-                MouseUnavailable(ui.receiver, transport, onRetry = vm::connectReceiver, onBluetooth = onBluetooth, onTypeLink = {
-                    vm.typeOnBox(ReceiverDownload.URL)
-                })
+                MouseUnavailable(
+                    ui.receiver, transport,
+                    onRetry = vm::connectReceiver,
+                    onBluetooth = onBluetooth,
+                    onTypeLink = vm::startTypeLink,
+                    onShare = { sharing = true },
+                )
             }
         }
 
@@ -187,6 +203,7 @@ private fun MouseUnavailable(
     onRetry: () -> Unit,
     onBluetooth: () -> Unit,
     onTypeLink: () -> Unit,
+    onShare: () -> Unit,
 ) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
@@ -215,6 +232,8 @@ private fun MouseUnavailable(
                 }) { Text(stringResource(R.string.receiver_link_copy)) }
                 TextButton(onClick = onTypeLink) { Text(stringResource(R.string.receiver_link_type)) }
             }
+            // The fallback: the phone serves the file on the Wi-Fi under a short address.
+            TextButton(onClick = onShare) { Text(stringResource(R.string.receiver_share_open)) }
             Spacer(Modifier.height(8.dp))
             OutlinedButton(onClick = onRetry) { Text(stringResource(R.string.action_try_again)) }
             // The phone can be a Bluetooth mouse without the receiver (Android only): open the Bluetooth list.
@@ -274,4 +293,37 @@ private fun Modifier.touchpad(
             if (!moved && !multi && !longFired && duration < 550) onTap()
         }
     }
+}
+
+/** "Type link on the box": what the phone waits for, and the fallback when the box does not take the text. */
+@Composable
+private fun LinkTypingDialog(state: LinkTyping, onClose: () -> Unit, onShare: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(stringResource(R.string.link_typing_title)) },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                if (state == LinkTyping.WAITING) {
+                    CircularProgressIndicator(color = Palette.accent, modifier = Modifier.padding(bottom = 12.dp).size(28.dp))
+                }
+                Text(
+                    stringResource(
+                        when (state) {
+                            LinkTyping.TYPED -> R.string.link_typing_done
+                            LinkTyping.NO_KEYBOARD -> R.string.link_typing_no_keyboard
+                            else -> R.string.link_typing_wait
+                        }
+                    ),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onClose) {
+                Text(stringResource(if (state == LinkTyping.WAITING) R.string.action_cancel else R.string.action_done))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onShare) { Text(stringResource(R.string.receiver_share_open)) }
+        },
+    )
 }

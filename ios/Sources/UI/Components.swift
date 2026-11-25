@@ -86,7 +86,7 @@ struct HoldButton<Content: View>: View {
     }
 
     private func begin() {
-        Haptics.tick(enabled: prefs.haptics)
+        Haptics.press(prefs)
         action()
         guard repeats else { return }
         let action = self.action
@@ -585,12 +585,20 @@ struct VolumePill: View {
 
 // MARK: - Background texture
 
-/// The remote screen background: vertical gradient, a soft accent light at the
-/// top center, a slight pebble leather, and a fixed grain. See docs/UI_SPEC.md, "Background texture".
+/// The remote screen background: vertical gradient, a soft accent light at the top center, the texture of the
+/// Background preference (none, pebble leather or satin), and a fixed grain. See docs/UI_SPEC.md, "Background texture".
 struct RemoteBackground: View {
+    /// A fixed texture (the Background picker). Nil uses the preference.
+    var texture: BackgroundTexture?
+
     @Environment(\.displayScale) private var displayScale
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accent) private var accent
+    @Environment(\.backgroundTexture) private var preferredTexture
+
+    init(texture: BackgroundTexture? = nil) {
+        self.texture = texture
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -606,10 +614,24 @@ struct RemoteBackground: View {
                     startRadius: 0,
                     endRadius: geometry.size.width * 0.7
                 )
-                // The leather tile (Assets: LeatherGrain, made by tools/make_leather.py) is 128 pt.
-                Image("LeatherGrain")
-                    .resizable(resizingMode: .tile)
-                    .opacity(colorScheme == .light ? 0.55 : 1)
+                switch texture ?? preferredTexture {
+                case .gradient:
+                    EmptyView()
+                case .leather:
+                    // The leather tile (Assets: LeatherGrain, made by tools/make_leather.py) is 128 pt.
+                    Image("LeatherGrain")
+                        .resizable(resizingMode: .tile)
+                        .opacity(colorScheme == .light ? 0.55 : 1)
+                case .satin:
+                    // The satin image (Assets: SatinFolds, made by tools/make_satin.py) is not a tile: it fills the
+                    // screen, and the rest is cropped.
+                    Image("SatinFolds")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .clipped()
+                        .opacity(colorScheme == .light ? 0.7 : 1)
+                }
                 Image(uiImage: GrainTexture.image(scale: displayScale, light: colorScheme == .light))
                     .resizable(resizingMode: .tile)
             }
