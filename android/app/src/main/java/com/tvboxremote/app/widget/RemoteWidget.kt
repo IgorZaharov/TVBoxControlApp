@@ -37,9 +37,9 @@ import kotlinx.coroutines.withTimeoutOrNull
  * - Android 12 and later, two or more devices: a card stack (StackView). Swipe up or down for the next device.
  * - Otherwise: one card. On Android 9 to 11 with two or more devices, a tap on the name goes to the next device.
  *
- * A key press is a broadcast to this provider. The app does not open.
+ * A key press starts [WidgetPressService], which sends the key. The app does not open.
  */
-class RemoteWidgetProvider : AppWidgetProvider() {
+open class RemoteWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         ids.forEach { RemoteWidget.render(context, manager, it) }
@@ -90,6 +90,9 @@ class RemoteWidgetProvider : AppWidgetProvider() {
     }
 }
 
+/** The compact widget (4 x 2 cells): the same remote, with the D-pad on the left and the other buttons on the right. */
+class RemoteWidgetCompactProvider : RemoteWidgetProvider()
+
 object RemoteWidget {
     const val ACTION_KEY = "com.tvboxremote.app.widget.KEY"
     const val ACTION_NEXT = "com.tvboxremote.app.widget.NEXT"
@@ -104,6 +107,9 @@ object RemoteWidget {
 
     /** StackView puts each card in a frame with this padding on every side. */
     private const val FRAME_PADDING_DP = 4f
+
+    /** A widget lower than this uses the compact card: the D-pad on the left, the other buttons on the right. */
+    private const val COMPACT_HEIGHT_DP = 150f
 
     internal val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -123,21 +129,24 @@ object RemoteWidget {
     /** Redraws every widget. Call when the saved devices change. */
     fun updateAll(context: Context) {
         val manager = AppWidgetManager.getInstance(context) ?: return
-        val ids = manager.getAppWidgetIds(ComponentName(context, RemoteWidgetProvider::class.java))
-        ids.forEach { render(context, manager, it) }
+        listOf(RemoteWidgetProvider::class.java, RemoteWidgetCompactProvider::class.java).forEach { provider ->
+            manager.getAppWidgetIds(ComponentName(context, provider)).forEach { render(context, manager, it) }
+        }
     }
 
     fun render(appContext: Context, manager: AppWidgetManager, id: Int) {
         // Strings in the app language (Preferences), also on Android 12 and earlier.
         val context = appContext.withAppLanguage()
         val devices = usableDevices(context)
+        val options = manager.getAppWidgetOptions(id)
+        val compact = widgetSize(context, options).height < COMPACT_HEIGHT_DP
         val views = when {
             devices.isEmpty() -> emptyCard(context)
             devices.size >= 2 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-                stack(context, id, devices, manager.getAppWidgetOptions(id))
+                stack(context, id, devices, options, compact)
             else -> {
                 val index = prefs(context).getInt("index_$id", 0).mod(devices.size)
-                singleCard(context, id, devices[index], canCycle = devices.size >= 2)
+                singleCard(context, id, devices[index], canCycle = devices.size >= 2, compact = compact)
             }
         }
         manager.updateAppWidget(id, views)
@@ -204,10 +213,10 @@ object RemoteWidget {
         }
 
     /** The card of one device with its own click intents (one card, no stack). */
-    private fun singleCard(context: Context, widgetId: Int, device: SavedDevice, canCycle: Boolean): RemoteViews {
-        val views = card(context, device)
+    private fun singleCard(context: Context, widgetId: Int, device: SavedDevice, canCycle: Boolean, compact: Boolean): RemoteViews {
+        val views = card(context, device, compact)
         BUTTONS.forEach { (viewId, key) ->
-            val intent = Intent(context, RemoteWidgetProvider::class.java)
+            val intent = WidgetPressService.intent(context)
                 .setAction(ACTION_KEY)
                 // A distinct data URI per widget and key, so that each button gets its own PendingIntent.
                 .setData(Uri.parse("tvboxremote://widget/$widgetId/${key.name}"))
@@ -215,7 +224,7 @@ object RemoteWidget {
                 .putExtra(EXTRA_KEY, key.name)
             views.setOnClickPendingIntent(
                 viewId,
-                PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE),
+                PendingIntent.getForegroundService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE),
             )
         }
         views.setOnClickPendingIntent(R.id.w_open, openAppIntent(context))
@@ -235,13 +244,13 @@ object RemoteWidget {
 
     /** The card stack: one card per device. Each button fills in its device and key into one broadcast template. */
     @RequiresApi(Build.VERSION_CODES.S)
-    private fun stack(context: Context, widgetId: Int, devices: List<SavedDevice>, options: Bundle?): RemoteViews {
+    private fun stack(context: Context, widgetId: Int, devices: List<SavedDevice>, options: Bundle?, compact: Boolean): RemoteViews {
         val size = widgetSize(context, options)
         val items = RemoteViews.RemoteCollectionItems.Builder()
             .setHasStableIds(true)
             .setViewTypeCount(1)
         devices.forEach { device ->
-            val card = card(context, device)
+            val card = card(context, device, compact)
             BUTTONS.forEach { (viewId, key) ->
                 card.setOnClickFillInIntent(viewId, Intent().putExtra(EXTRA_DEVICE, device.id).putExtra(EXTRA_KEY, key.name))
             }
@@ -254,13 +263,13 @@ object RemoteWidget {
         }
         val views = RemoteViews(context.packageName, R.layout.widget_stack)
         views.setRemoteAdapter(R.id.w_stack, items.build())
-        val template = Intent(context, RemoteWidgetProvider::class.java)
+        val template = WidgetPressService.intent(context)
             .setAction(ACTION_KEY)
             .setData(Uri.parse("tvboxremote://widget/$widgetId/stack"))
         views.setPendingIntentTemplate(
             R.id.w_stack,
             // Mutable: each button fills in its device and key.
-            PendingIntent.getBroadcast(context, 0, template, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE),
+            PendingIntent.getForegroundService(context, 0, template, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE),
         )
         views.setOnClickPendingIntent(R.id.w_stack_open, openAppIntent(context))
 
@@ -279,8 +288,8 @@ object RemoteWidget {
     }
 
     /** The card content of one device, without click intents. */
-    private fun card(context: Context, device: SavedDevice): RemoteViews =
-        RemoteViews(context.packageName, R.layout.widget_card).apply {
+    private fun card(context: Context, device: SavedDevice, compact: Boolean): RemoteViews =
+        RemoteViews(context.packageName, if (compact) R.layout.widget_card_compact else R.layout.widget_card).apply {
             setTextViewText(R.id.w_name, device.name)
             if (failureShown(context, device.id)) {
                 setTextViewText(R.id.w_message, context.getString(R.string.widget_cannot_reach, device.name))
@@ -304,13 +313,16 @@ object RemoteWidget {
      * The widget size in dp in the current orientation. Android 12 and later list the exact sizes:
      * portrait is the narrowest entry, landscape the widest.
      */
-    @RequiresApi(Build.VERSION_CODES.S)
     private fun widgetSize(context: Context, options: Bundle?): SizeDp {
         val landscape = context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        // The typed getter needs Android 13; the widget stack starts at Android 12.
+        // The size list needs Android 12, and its typed getter Android 13.
         @Suppress("DEPRECATION")
-        val sizes = options?.getParcelableArrayList<SizeF>(AppWidgetManager.OPTION_APPWIDGET_SIZES)
-            ?.filter { it.width > 0f && it.height > 0f }
+        val sizes = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            options?.getParcelableArrayList<SizeF>(AppWidgetManager.OPTION_APPWIDGET_SIZES)
+                ?.filter { it.width > 0f && it.height > 0f }
+        } else {
+            null
+        }
         if (!sizes.isNullOrEmpty()) {
             val s = if (landscape) sizes.maxBy { it.width } else sizes.minBy { it.width }
             return SizeDp(s.width, s.height)

@@ -44,8 +44,8 @@ object LiveLinks {
  * for a short time, so that quick repeat presses are fast.
  */
 object WidgetSender {
-    /** A connection of the widget closes after this time without a press. */
-    private const val IDLE_CLOSE_MS = 20_000L
+    /** A connection of the widget closes after this time without a press, before WidgetPressService stops. */
+    private const val IDLE_CLOSE_MS = 7_000L
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()

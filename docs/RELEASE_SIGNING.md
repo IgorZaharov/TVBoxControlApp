@@ -205,5 +205,6 @@ You can also push a tag, for example `v1.0.0`. A tag builds both apps and upload
 - The version name comes from `MARKETING_VERSION` in `ios/project.yml` and `versionName` in `android/app/build.gradle.kts`. Change it there for a new version.
 - After an iOS upload, Apple processes the build for 5 to 30 minutes. Then it shows in App Store Connect > TestFlight.
 - The signed files are in the workflow artifacts `TVBoxRemote-ios-appstore` and `TVBoxRemote-android-release`.
+- The Android job also signs the box receiver with the upload key and publishes it as a GitHub release (tag `build-<run number>`, or the pushed tag) with the file `receiver.apk`. Both apps link to `https://github.com/IgorZaharov/TVBoxControlApp/releases/latest/download/receiver.apk`. GitHub sends this link to the newest release, so every release must have `receiver.apk`. Do not delete the newest release.
 
 If a secret is missing, the first step of the job fails and names the secret.

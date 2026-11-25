@@ -263,6 +263,8 @@ struct WidgetKeyButton: View {
                 .foregroundColor(tint)
                 .frame(width: side, height: side)
                 .background(WidgetRaised(shape: Circle()))
+                // While the press runs, iOS shows its own effect on the button: the widget feedback for a press.
+                .invalidatableContent()
         }
         .buttonStyle(.plain)
         .accessibilityLabel(key.title)
@@ -307,6 +309,7 @@ struct WidgetDPad: View {
                             .fill(LinearGradient(colors: [widgetAccent.okTop, widgetAccent.okBottom], startPoint: .top, endPoint: .bottom))
                             .shadow(color: widgetAccent.accent.opacity(0.3), radius: 8)
                     )
+                    .invalidatableContent()
             }
             .buttonStyle(.plain)
             .accessibilityLabel(RemoteKey.center.title)
@@ -321,6 +324,7 @@ struct WidgetDPad: View {
                 .foregroundColor(Theme.onSurface)
                 .frame(width: side * 0.3, height: side * 0.3)
                 .contentShape(Rectangle())
+                .invalidatableContent()
         }
         .buttonStyle(.plain)
         .accessibilityLabel(key.title)

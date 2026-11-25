@@ -3,6 +3,10 @@ plugins {
     alias(libs.plugins.kotlin.android)
 }
 
+// Release signing (docs/RELEASE_SIGNING.md): the release workflow signs the receiver with the upload key, so that
+// a newer receiver.apk installs over an older one. Without ANDROID_KEYSTORE_FILE the release build is not signed.
+val releaseKeystore: String? = System.getenv("ANDROID_KEYSTORE_FILE")
+
 android {
     namespace = "com.tvboxremote.receiver"
     compileSdk = 35
@@ -11,12 +15,25 @@ android {
         applicationId = "com.tvboxremote.receiver"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
+        // The release workflow sets VERSION_CODE to its run number, so each receiver.apk is newer than the one before.
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
         versionName = "1.0.0"
+    }
+
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
+            if (releaseKeystore != null) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

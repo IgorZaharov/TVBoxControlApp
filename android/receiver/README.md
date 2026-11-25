@@ -25,12 +25,24 @@ The APK is `android/receiver/build/outputs/apk/debug/receiver-debug.apk`.
 
 ## Install
 
-The receiver is not in an app store. Install it from a computer with ADB (Android Debug Bridge):
+The receiver is not in an app store. The newest signed receiver is always at this link:
+
+```
+https://github.com/IgorZaharov/TVBoxControlApp/releases/latest/download/receiver.apk
+```
+
+To install it without a computer:
+
+1. On the box, open a browser (or an app that downloads files from a link) and select the address bar.
+2. On the phone, open TVBox Remote, then the mouse screen. Select "Type link on the box". The phone types the link into the address bar. You can also select "Copy link" and paste it.
+3. Download the file and open it. If the box asks, allow the browser to install unknown apps.
+
+Install it from a computer with ADB (Android Debug Bridge):
 
 1. On the box, open Settings, then Device Preferences, then About. Select Build seven times to turn on Developer options.
 2. In Developer options, turn on USB debugging or network debugging.
 3. On the computer, connect to the box: `adb connect <box IP address>`.
-4. Install the app: `adb install receiver-debug.apk`.
+4. Install the app: `adb install receiver.apk`.
 
 You can also copy the APK to a USB drive and open it with a file manager on the box.
 

@@ -426,6 +426,14 @@ final class AppModel: ObservableObject {
         showMouse = false
     }
 
+    /// Types `text` into the focused text field on the box, for example the receiver link into the address bar
+    /// of a browser.
+    func typeOnBox(_ text: String) {
+        guard connectionState == .connected else { return }
+        session?.sendText(text)
+        signals.send()
+    }
+
     func retryMouse() {
         receiver?.close()
         receiver = nil

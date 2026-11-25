@@ -263,3 +263,9 @@
 "widget.intent.press" = "Press a key";
 "widget.intent.key" = "Key";
 "widget.intent.next" = "Next TV box";
+
+/* Receiver download link (Mouse screen) */
+"receiver.link.hint" = "On the box, open a browser and select the address bar. Then type the link from here, or paste the copied link.";
+"receiver.link.copy" = "Copy link";
+"receiver.link.type" = "Type link on the box";
+"receiver.link.copied" = "Download link copied";

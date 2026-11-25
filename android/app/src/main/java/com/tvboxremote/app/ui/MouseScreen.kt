@@ -1,5 +1,9 @@
 package com.tvboxremote.app.ui
 
+import com.tvboxremote.app.receiver.ReceiverDownload
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.LocalClipboardManager
+import android.widget.Toast
 import com.tvboxremote.app.R
 import androidx.compose.ui.res.stringResource
 import android.os.SystemClock
@@ -142,7 +146,9 @@ fun MouseScreen(vm: MainViewModel, onDone: () -> Unit, onBluetooth: () -> Unit) 
                     )
                 }
             } else {
-                MouseUnavailable(ui.receiver, transport, onRetry = vm::connectReceiver, onBluetooth = onBluetooth)
+                MouseUnavailable(ui.receiver, transport, onRetry = vm::connectReceiver, onBluetooth = onBluetooth, onTypeLink = {
+                    vm.typeOnBox(ReceiverDownload.URL)
+                })
             }
         }
 
@@ -175,7 +181,15 @@ private fun ClickBar(enabled: Boolean, modifier: Modifier, onClick: () -> Unit) 
 }
 
 @Composable
-private fun MouseUnavailable(state: ReceiverState, transport: Transport?, onRetry: () -> Unit, onBluetooth: () -> Unit) {
+private fun MouseUnavailable(
+    state: ReceiverState,
+    transport: Transport?,
+    onRetry: () -> Unit,
+    onBluetooth: () -> Unit,
+    onTypeLink: () -> Unit,
+) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
     Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         val text = when {
             transport == null -> stringResource(R.string.mouse_connect_first)
@@ -191,7 +205,17 @@ private fun MouseUnavailable(state: ReceiverState, transport: Transport?, onRetr
             Text(listOfNotNull(stringResource(state.message), state.detail).joinToString("\n"), color = Palette.muted, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
         }
         if (transport == Transport.WIFI && (state is ReceiverState.Failed || state is ReceiverState.Disconnected)) {
-            Spacer(Modifier.height(16.dp))
+            // The receiver download: copy the fixed link, or type it into the browser address bar on the box.
+            Text(stringResource(R.string.receiver_link_hint), color = Palette.muted, fontSize = 13.sp, textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 12.dp))
+            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = {
+                    clipboard.setText(AnnotatedString(ReceiverDownload.URL))
+                    Toast.makeText(context, R.string.receiver_link_copied, Toast.LENGTH_SHORT).show()
+                }) { Text(stringResource(R.string.receiver_link_copy)) }
+                TextButton(onClick = onTypeLink) { Text(stringResource(R.string.receiver_link_type)) }
+            }
+            Spacer(Modifier.height(8.dp))
             OutlinedButton(onClick = onRetry) { Text(stringResource(R.string.action_try_again)) }
             // The phone can be a Bluetooth mouse without the receiver (Android only): open the Bluetooth list.
             Spacer(Modifier.height(8.dp))

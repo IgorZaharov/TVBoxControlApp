@@ -23,6 +23,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
 
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- The widget sends its key presses from a short foreground service. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false" />
@@ -59,6 +61,25 @@
                 android:name="autoStoreLocales"
                 android:value="true" />
         </service>
+
+        <!-- Home screen remote: sends the widget key presses (a short foreground service, see WidgetPressService). -->
+        <service
+            android:name=".widget.WidgetPressService"
+            android:exported="false"
+            android:foregroundServiceType="shortService" />
+
+        <!-- Home screen remote, compact: 4 x 2 cells -->
+        <receiver
+            android:name=".widget.RemoteWidgetCompactProvider"
+            android:exported="false"
+            android:label="@string/widget_name_compact">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/remote_widget_compact_info" />
+        </receiver>
 
         <!-- Home screen remote -->
         <receiver

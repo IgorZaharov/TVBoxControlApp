@@ -509,6 +509,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         lastSentText = text
     }
 
+    /**
+     * Types [text] into the focused text field on the box (Wi-Fi only), for example the receiver link into the
+     * address bar of a browser. Returns false if no Wi-Fi box is connected.
+     */
+    fun typeOnBox(text: String): Boolean {
+        val s = session ?: return false
+        if (transport != Transport.WIFI) return false
+        s.sendText(text)
+        signal()
+        return true
+    }
+
     /** True if the mouse can work now: Bluetooth, or a ready receiver. */
     val mouseReady: Boolean
         get() = transport == Transport.BLUETOOTH || _ui.value.receiver is ReceiverState.Ready

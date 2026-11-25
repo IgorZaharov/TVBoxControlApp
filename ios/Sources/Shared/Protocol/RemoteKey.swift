@@ -109,6 +109,6 @@ enum RemoteKey: Int, CaseIterable {
     /// Keys in the Media keys sheet, in the order of docs/UI_SPEC.md.
     static let mediaKeys: [RemoteKey] = [
         .previous, .rewind, .playPause, .fastForward, .next,
-        .channelUp, .channelDown, .tvInput, .guide, .search, .allApps, .menu,
+        .channelUp, .channelDown, .tvInput, .guide, .search, .allApps, .settings,
     ]
 }

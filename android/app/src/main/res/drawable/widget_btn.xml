@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A raised round button. Pressed, the gradient flips (docs/UI_SPEC.md, "Raised buttons"). -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_pressed="true">
-        <shape android:shape="oval">
-            <gradient android:angle="270" android:endColor="#22252D" android:startColor="#17191E" />
-            <stroke android:width="1dp" android:color="#664F8CFF" />
-        </shape>
-    </item>
+<!-- A raised round button. A press shows an accent ripple, the gradient flips and an accent ring lights up
+     (docs/UI_SPEC.md, "Home screen widget"). A widget cannot draw the app's press glow, so this is the widget's. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#994F8CFF">
     <item>
-        <shape android:shape="oval">
-            <gradient android:angle="270" android:endColor="#17191E" android:startColor="#272A33" />
-            <stroke android:width="1dp" android:color="#1AFFFFFF" />
-        </shape>
+        <selector>
+            <item android:state_pressed="true">
+                <shape android:shape="oval">
+                    <gradient android:angle="270" android:endColor="#2A3350" android:startColor="#1B2236" />
+                    <stroke android:width="2dp" android:color="#E64F8CFF" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="oval">
+                    <gradient android:angle="270" android:endColor="#17191E" android:startColor="#272A33" />
+                    <stroke android:width="1dp" android:color="#1AFFFFFF" />
+                </shape>
+            </item>
+        </selector>
     </item>
-</selector>
+</ripple>

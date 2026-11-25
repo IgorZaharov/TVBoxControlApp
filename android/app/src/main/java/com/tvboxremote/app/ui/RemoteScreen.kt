@@ -21,10 +21,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Mouse
 import androidx.compose.material.icons.filled.PowerSettingsNew
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -127,7 +127,7 @@ fun RemoteScreen(
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     RemoteButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.key_back)) { onKey(RemoteKey.BACK) }
                     RemoteButton(Icons.Filled.Home, stringResource(R.string.key_home)) { onKey(RemoteKey.HOME) }
-                    RemoteButton(Icons.Filled.Settings, stringResource(R.string.key_settings)) { onKey(RemoteKey.SETTINGS) }
+                    RemoteButton(Icons.Filled.Menu, stringResource(R.string.key_menu)) { onKey(RemoteKey.MENU) }
                 }
 
                 Spacer(Modifier.height(16.dp))

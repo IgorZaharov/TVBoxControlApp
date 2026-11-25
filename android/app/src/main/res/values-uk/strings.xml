@@ -113,6 +113,10 @@
     <string name="mouse_receiver_connecting">Підключення до приймача миші…</string>
     <string name="mouse_enter_code">Введіть код, показаний на телевізорі.</string>
     <string name="mouse_install_receiver">Установіть на приставку TVBox Remote Receiver, щоб користуватися мишею через Wi-Fi. Або підключіться через Bluetooth.</string>
+    <string name="receiver_link_hint">На приставці відкрийте браузер і виберіть адресний рядок. Потім введіть посилання звідси або вставте скопійоване.</string>
+    <string name="receiver_link_copy">Копіювати посилання</string>
+    <string name="receiver_link_type">Ввести посилання на приставці</string>
+    <string name="receiver_link_copied">Посилання для завантаження скопійовано</string>
     <string name="receiver_locked">Забагато неправильних кодів. Зачекайте 5 хвилин і спробуйте ще раз.</string>
     <string name="receiver_full">Цим приймачем уже користуються 4 телефони.</string>
     <string name="receiver_failed">Не вдалося підключитися до приймача.</string>
@@ -210,6 +214,10 @@
 
     <!-- Home screen widget -->
     <string name="widget_name">Пульт</string>
+    <string name="widget_name_compact">TVBox Remote, компактний</string>
+    <string name="widget_description_compact">Маленький пульт: D-pad, живлення, «Назад» і «Додому» у два ряди.</string>
+    <string name="widget_channel">Натискання віджета</string>
+    <string name="widget_sending">Надсилання натискання віджета</string>
     <string name="widget_description">Маленький пульт із хрестовиною та кнопками живлення, «Назад» і «Додому».</string>
     <string name="widget_add_box">Додайте TV-приставку в застосунку</string>
     <string name="widget_cannot_reach">Не вдається з\'єднатися з «%1$s»</string>

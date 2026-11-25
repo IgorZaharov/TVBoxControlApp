@@ -23,9 +23,9 @@ import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.KeyboardDoubleArrowDown
 import androidx.compose.material.icons.filled.KeyboardDoubleArrowUp
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.AlertDialog
@@ -124,7 +124,7 @@ fun MediaKeysSheet(onKey: (RemoteKey) -> Unit, onDismiss: () -> Unit) {
         RemoteKey.GUIDE to Icons.AutoMirrored.Filled.ViewList,
         RemoteKey.SEARCH to Icons.Filled.Search,
         RemoteKey.ALL_APPS to Icons.Filled.Apps,
-        RemoteKey.MENU to Icons.Filled.Menu,
+        RemoteKey.SETTINGS to Icons.Filled.Settings,
     )
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Palette.surface) {
         Text(stringResource(R.string.media_title), fontSize = 18.sp, modifier = Modifier.padding(horizontal = 20.dp))

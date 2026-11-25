@@ -6,6 +6,8 @@ import UIKit
 struct MouseView: View {
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var prefs: Preferences
+    /// Shows "Download link copied" after a tap on Copy link.
+    @State private var linkCopied = false
     @Environment(\.accent) private var accent
 
     /// The Gyro switch is a preference, so it stays as the user left it after a restart.
@@ -114,6 +116,24 @@ struct MouseView: View {
                     .font(.callout)
                     .foregroundColor(Theme.onSurface)
                     .multilineTextAlignment(.center)
+                // The receiver download: copy the fixed link, or type it into the browser address bar on the box.
+                Text(L10n.t("receiver.link.hint"))
+                    .font(.footnote)
+                    .foregroundColor(Theme.muted)
+                    .multilineTextAlignment(.center)
+                HStack(spacing: 12) {
+                    Button(L10n.t("receiver.link.copy")) {
+                        UIPasteboard.general.string = ReceiverDownload.url
+                        linkCopied = true
+                    }
+                    Button(L10n.t("receiver.link.type")) { model.typeOnBox(ReceiverDownload.url) }
+                }
+                .font(.footnote)
+                if linkCopied {
+                    Text(L10n.t("receiver.link.copied"))
+                        .font(.footnote)
+                        .foregroundColor(Theme.muted)
+                }
                 Button(L10n.t("action.tryAgain")) { model.retryMouse() }
                     .buttonStyle(.bordered)
             }

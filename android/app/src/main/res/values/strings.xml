@@ -117,6 +117,10 @@
     <string name="mouse_receiver_connecting">Connecting to the mouse receiver…</string>
     <string name="mouse_enter_code">Enter the code shown on your TV.</string>
     <string name="mouse_install_receiver">Install TVBox Remote Receiver on your box to use the mouse over Wi-Fi. Or connect with Bluetooth.</string>
+    <string name="receiver_link_hint">On the box, open a browser and select the address bar. Then type the link from here, or paste the copied link.</string>
+    <string name="receiver_link_copy">Copy link</string>
+    <string name="receiver_link_type">Type link on the box</string>
+    <string name="receiver_link_copied">Download link copied</string>
     <string name="receiver_locked">Too many wrong codes. Wait 5 minutes, then try again.</string>
     <string name="receiver_full">4 phones already use this receiver.</string>
     <string name="receiver_failed">The connection to the receiver failed.</string>
@@ -214,6 +218,10 @@
 
     <!-- Home screen widget -->
     <string name="widget_name">Remote</string>
+    <string name="widget_name_compact">TVBox Remote, compact</string>
+    <string name="widget_description_compact">A small remote: D-pad, Power, Back and Home in two rows.</string>
+    <string name="widget_channel">Widget presses</string>
+    <string name="widget_sending">Sending the widget press</string>
     <string name="widget_description">A small remote with a D-pad, Power, Back and Home.</string>
     <string name="widget_add_box">Add a TV box in the app</string>
     <string name="widget_cannot_reach">Cannot reach %1$s</string>

@@ -52,7 +52,7 @@ struct RemoteView: View {
             HStack(spacing: 32) {
                 CircleButton(systemImage: RemoteKey.back.symbol, label: RemoteKey.back.title) { model.press(.back) }
                 CircleButton(systemImage: RemoteKey.home.symbol, label: RemoteKey.home.title) { model.press(.home) }
-                CircleButton(systemImage: RemoteKey.settings.symbol, label: RemoteKey.settings.title) { model.press(.settings) }
+                CircleButton(systemImage: RemoteKey.menu.symbol, label: RemoteKey.menu.title) { model.press(.menu) }
             }
             .padding(.top, 20)
 

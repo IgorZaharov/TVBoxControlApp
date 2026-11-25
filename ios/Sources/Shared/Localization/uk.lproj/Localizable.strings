@@ -261,3 +261,9 @@
 "widget.intent.press" = "Натиснути клавішу";
 "widget.intent.key" = "Клавіша";
 "widget.intent.next" = "Наступна приставка";
+
+/* Receiver download link (Mouse screen) */
+"receiver.link.hint" = "На приставці відкрийте браузер і виберіть адресний рядок. Потім введіть посилання звідси або вставте скопійоване.";
+"receiver.link.copy" = "Копіювати посилання";
+"receiver.link.type" = "Ввести посилання на приставці";
+"receiver.link.copied" = "Посилання для завантаження скопійовано";

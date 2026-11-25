@@ -211,7 +211,9 @@ The widget is a small remote for the home screen.
 
 Android:
 
-- Default size 3 × 3 cells. You can resize it.
+- Two widgets in the widget list: "TVBox Remote" (default 3 × 3 cells) and "TVBox Remote, compact" (4 × 2 cells: the D-pad on the left, the name, Power, Back and Home on the right, as the iPhone medium widget). You can resize both. A widget lower than 150 dp uses the compact card.
+- A press shows on the button: an accent ripple, the flipped gradient and a 2 dp accent ring (white on OK). A widget cannot draw the press glow of the app.
+- A press starts a short foreground service that sends the key. Android blocks the network of a closed app in the background, so a plain broadcast waited until the app opened. The service stops 8 s after the last press, before Android shows its notification (after about 10 s).
 - With two or more saved devices (Android 12 and later), swipe up or down on the widget to go to the next device. The devices are a card stack.
 - On Android 9 to 11, a tap on the device name goes to the next device.
 - Bluetooth devices work too. The widget connects as a Bluetooth keyboard if necessary.
@@ -219,6 +221,7 @@ Android:
 iOS (iOS 17 and later):
 
 - Sizes: medium (D-pad on the left, the other buttons on the right) and large.
+- A press shows the system press effect of iOS on the button while the key goes out (`invalidatableContent`).
 - Wi-Fi devices only.
 - Edit the widget to choose its device. A small "next device" button in the widget header also goes to the next saved device.
 
@@ -290,7 +293,7 @@ From top to bottom:
 1. Top bar. Left: the status dot and the box name ("Not connected" if none). A tap on the name opens Devices. Right: a menu button (three dots).
 2. Row: Power (left). Keyboard, Mouse and Controller (right).
 3. D-pad with OK.
-4. Row: Back, Home, Settings.
+4. Row: Back, Home, Menu (Android TV key 82, the menu of the current app).
 5. Volume pill: a wide rounded bar with Volume down, Mute, Volume up.
 
 The signal line (see Premium look) is above the D-pad.
@@ -299,7 +302,7 @@ Layout for one-hand use: items 1 and 2 stay at the top. Items 3 to 5 form one gr
 
 | Space in the bottom group | Size |
 |---|---|
-| D-pad to the Back, Home, Settings row | 20 pt |
+| D-pad to the Back, Home, Menu row | 20 pt |
 | That row to the volume pill | 16 pt |
 | Volume pill to the volume text | 8 pt |
 | Volume text to the bottom of the safe area | 16 pt |
@@ -341,7 +344,7 @@ A bottom sheet with one text field. The field has focus and the system keyboard 
 
 ## Media keys sheet
 
-A grid of round buttons: Previous, Rewind, Play/Pause, Fast forward, Next, Channel up, Channel down, Input, Guide, Search, All apps, Menu.
+A grid of round buttons: Previous, Rewind, Play/Pause, Fast forward, Next, Channel up, Channel down, Input, Guide, Search, All apps, Settings.
 
 ## Mouse screen
 
