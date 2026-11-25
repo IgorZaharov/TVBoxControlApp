@@ -198,10 +198,9 @@ private val CardShape = RoundedCornerShape(20.dp)
 
 @Composable
 private fun GlassCard(content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().glassSurface(CardShape).padding(horizontal = 12.dp, vertical = 2.dp),
-        content = content,
-    )
+    GlassBox(CardShape, Modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp), content = content)
+    }
 }
 
 /** A row separator, inset 64 dp from the card edge (12 dp card padding + 52 dp). */

@@ -19,7 +19,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -187,8 +189,10 @@ fun ControllerLayoutEditor(initial: ControllerLayout, onDone: (ControllerLayout)
                 Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = h * 0.236f)
-                    .width(320.dp)
-                    .background(Palette.surface.copy(alpha = 0.92f), RoundedCornerShape(16.dp))
+                    // Wide enough for the three buttons in every language: the labels never wrap.
+                    .widthIn(min = 320.dp, max = 560.dp)
+                    .width(IntrinsicSize.Max)
+                    .background(Palette.surface.copy(alpha = 0.96f), RoundedCornerShape(16.dp))
                     .padding(horizontal = 16.dp, vertical = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -214,14 +218,14 @@ fun ControllerLayoutEditor(initial: ControllerLayout, onDone: (ControllerLayout)
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    OutlinedButton(onClick = onCancel) { Text(stringResource(R.string.action_cancel)) }
+                    OutlinedButton(onClick = onCancel) { Text(stringResource(R.string.action_cancel), maxLines = 1, softWrap = false) }
                     OutlinedButton(onClick = { layout = ControllerLayout.DEFAULT; selected = null }) {
-                        Text(stringResource(R.string.action_reset))
+                        Text(stringResource(R.string.action_reset), maxLines = 1, softWrap = false)
                     }
                     Button(
                         onClick = { onDone(layout) },
                         colors = ButtonDefaults.buttonColors(containerColor = Palette.accent),
-                    ) { Text(stringResource(R.string.action_done)) }
+                    ) { Text(stringResource(R.string.action_done), maxLines = 1, softWrap = false) }
                 }
             }
         }

@@ -371,23 +371,40 @@ final class AppModel: ObservableObject {
 
     func press(_ key: RemoteKey) {
         guard requireConnection() else { return }
-        session?.sendKey(key.rawValue)
+        // NVIDIA SHIELD ignores the Settings key code, so open the settings with an app link there.
+        if key == .settings, session?.isNvidia == true {
+            session?.launch(appLink: atvSettingsLink)
+        } else {
+            session?.sendKey(key.rawValue)
+        }
         signals.send()
     }
 
     func openKeyboard() {
         guard requireConnection() else { return }
+        // The phone field starts empty, so the box gets only what the user types now.
+        keyboardText = ""
+        lastSentText = ""
         sheet = .keyboard
     }
 
+    /// The text that the box has from the phone field. The box adds text at the cursor, so the phone sends
+    /// one Delete for each removed character and then only the new characters.
+    private var lastSentText = ""
+
     func sendText(_ text: String) {
-        guard connectionState == .connected else { return }
-        session?.sendText(text)
+        guard connectionState == .connected, let session else { return }
+        let change = TextChange(from: lastSentText, to: text)
+        for _ in 0..<change.deletes { session.sendKey(RemoteKey.delete.rawValue) }
+        session.sendText(change.insert)
+        lastSentText = text
         signals.send()
     }
 
     private func imeShown(_ text: String) {
         guard sheet == nil, !showMouse else { return }
+        // The box field has this text already.
+        lastSentText = text
         keyboardText = text
         sheet = .keyboard
     }
@@ -412,8 +429,16 @@ final class AppModel: ObservableObject {
     func retryMouse() {
         receiver?.close()
         receiver = nil
-        if let box = currentBox {
-            connectReceiver(box)
+        guard let box = currentBox else {
+            mouseState = .unavailable(Self.noReceiverMessage)
+            return
+        }
+        // A refused connection fails at once. Show "Connecting" for a moment, so that Try again visibly works.
+        mouseState = .connecting
+        Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            guard let self, self.receiver == nil, self.showMouse, self.currentBox?.id == box.id else { return }
+            self.connectReceiver(box)
         }
     }
 
@@ -701,5 +726,20 @@ final class AppModel: ObservableObject {
         if hostChanged, pairing == nil, case .failed = connectionState {
             reconnect()
         }
+    }
+}
+
+/// The change from the text that the box has to the new text of the phone field: how many characters to delete
+/// at the end, and what to insert after that.
+struct TextChange: Equatable {
+    let deletes: Int
+    let insert: String
+
+    init(from old: String, to new: String) {
+        let a = Array(old), b = Array(new)
+        var common = 0
+        while common < a.count, common < b.count, a[common] == b[common] { common += 1 }
+        deletes = a.count - common
+        insert = String(b[common...])
     }
 }

@@ -162,6 +162,8 @@ private fun App(vm: MainViewModel) {
     Scaffold(
         modifier = Modifier.remoteBackground(),
         containerColor = Color.Transparent,
+        // A transparent container gives no content color, so text without its own color would be black.
+        contentColor = Palette.onSurface,
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         // The remote and the controller draw their own background behind the system bars.
@@ -186,7 +188,7 @@ private fun App(vm: MainViewModel) {
                     },
                 )
                 Screen.DEVICES -> DevicesScreen(vm, onBack = { screen = Screen.REMOTE })
-                Screen.MOUSE -> MouseScreen(vm, onDone = { screen = Screen.REMOTE })
+                Screen.MOUSE -> MouseScreen(vm, onDone = { screen = Screen.REMOTE }, onBluetooth = { screen = Screen.DEVICES })
                 Screen.PREFERENCES -> PreferencesScreen(
                     prefs, vm::updatePreferences,
                     onControllerLayout = { screen = Screen.CONTROLLER_LAYOUT },

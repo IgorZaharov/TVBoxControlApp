@@ -75,6 +75,14 @@ final class AtvRemoteSession {
         state = .closed(nil)
     }
 
+    private var features = atvFeatures
+
+    /// The maker of the box, from its configure message (for example "NVIDIA"). Empty until the box sends it.
+    private(set) var boxVendor = ""
+
+    /// True for an NVIDIA box, which ignores the Settings key code.
+    var isNvidia: Bool { boxVendor.range(of: "nvidia", options: .caseInsensitive) != nil }
+
     /// How long ago the box last sent something. The box pings every 5 s.
     var secondsSinceActivity: TimeInterval { Date().timeIntervalSince(lastActivity) }
 
@@ -90,8 +98,9 @@ final class AtvRemoteSession {
         connection?.send(RemoteMessages.key(code, direction: direction))
     }
 
+    /// Inserts `text` at the cursor of the focused field on the box.
     func sendText(_ text: String) {
-        guard state == .connected else { return }
+        guard state == .connected, !text.isEmpty else { return }
         connection?.send(RemoteMessages.text(text, imeCounter: imeCounter, fieldCounter: fieldCounter))
     }
 
@@ -124,11 +133,14 @@ final class AtvRemoteSession {
     private func handleFrame(_ data: Data) {
         guard let event = try? RemoteEvent(data) else { return }
         switch event {
-        case .configure:
-            connection?.send(RemoteMessages.configure(model: model, vendor: "Apple"))
+        case .configure(let supported, let vendor):
+            // Use only the features that the box also supports, as the box expects.
+            if supported != 0 { features = atvFeatures & supported }
+            boxVendor = vendor
+            connection?.send(RemoteMessages.configure(model: model, vendor: "Apple", features: features))
             setState(.connected)
         case .setActive:
-            connection?.send(RemoteMessages.setActive())
+            connection?.send(RemoteMessages.setActive(features: features))
             isActive = true
             setState(.connected)
         case .ping(let value):

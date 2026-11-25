@@ -363,8 +363,8 @@ The Preferences screen uses the remote background (gradient, accent light, grain
 
 | Layer | Dark theme | Light theme |
 |---|---|---|
-| Fill | Vertical gradient, white 7% at the top to white 3% at the bottom | Vertical gradient, white 78% at the top to white 64% at the bottom |
-| Frost | iOS: the ultra-thin system material under the fill. Android: the fine grain of the background shows through; there is no backdrop blur. | The same |
+| Frost | The background under the card, blurred. iOS: the ultra-thin system material. Android 12 and later: the card draws the part of the background under it with a 16 dp blur. Android 11 and earlier: no blur, the fill covers the texture. | The same |
+| Fill (over the frost) | Vertical gradient, `#262930` at 80% at the top to `#1B1D23` at 74% at the bottom | Vertical gradient, white 90% at the top to white 82% at the bottom |
 | Border | 1 pt, white 12% at the top fading to white 4% at the bottom | 1 pt, white 100%, plus a hairline of black 6% outside it |
 | Shadow | Black 45%, blur 24, offset y 10 | Black 10%, blur 20, offset y 8 |
 | Corner radius | 20 pt | 20 pt |

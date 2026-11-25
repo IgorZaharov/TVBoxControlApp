@@ -133,6 +133,8 @@
     <string name="msg_bt_lost">З’єднання Bluetooth втрачено.</string>
     <string name="msg_box_removed">%1$s видалено. Щоб користуватися нею, підключіть її знову.</string>
     <string name="msg_connection_lost">З’єднання з %1$s втрачено.</string>
+    <string name="msg_connection_lost_reason">З’єднання з %1$s втрачено: %2$s</string>
+    <string name="mouse_use_bluetooth">Підключитися через Bluetooth</string>
     <string name="msg_new_certificate">%1$s має новий сертифікат. Забудьте приставку й підключіть її знову.</string>
     <string name="msg_cannot_connect">Не вдалося підключитися до %1$s: %2$s</string>
     <string name="msg_key_not_on_bt">Клавіша «%1$s» недоступна через Bluetooth.</string>

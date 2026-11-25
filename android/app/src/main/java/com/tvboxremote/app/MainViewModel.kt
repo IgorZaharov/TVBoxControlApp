@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothDevice
 import android.os.Build
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tvboxremote.app.atv.AtvPairing
@@ -31,6 +32,7 @@ import com.tvboxremote.app.receiver.ReceiverClient
 import com.tvboxremote.app.receiver.ReceiverState
 import com.tvboxremote.app.remote.HidAction
 import com.tvboxremote.app.remote.RemoteKey
+import com.tvboxremote.app.remote.TextChange
 import com.tvboxremote.app.widget.LiveLinks
 import com.tvboxremote.app.widget.RemoteWidget
 import com.tvboxremote.app.widget.SavedDevice
@@ -60,6 +62,13 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 /** A marker for "no error" inside a flow of errors. */
 private val NO_ERROR = Throwable("none")
+
+/** Automatic reconnects after a lost Wi-Fi link, before the app shows "Connection lost". */
+private const val MAX_RECONNECTS = 3
+/** The wait before reconnect n is n times this. */
+private const val RECONNECT_DELAY_MS = 1_000L
+/** A link that lasted this long counts as working: a drop after it starts a new series of reconnects. */
+private const val STABLE_LINK_MS = 30_000L
 
 enum class Transport { WIFI, BLUETOOTH }
 
@@ -113,6 +122,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private var session: AtvRemoteSession? = null
     private var sessionJob: Job? = null
+    private var reconnectJob: Job? = null
     private var receiver: ReceiverClient? = null
     private var receiverJob: Job? = null
     private var pendingCode: CompletableDeferred<String?>? = null
@@ -233,7 +243,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---------- Wi-Fi: Android TV Remote ----------
 
-    fun connectWifi(box: TvBox, quiet: Boolean = false) {
+    /**
+     * Connects to [box]. [attempt] counts the automatic reconnects after a lost link: 0 for a connect that the user
+     * or the app start asked for.
+     */
+    fun connectWifi(box: TvBox, quiet: Boolean = false, attempt: Int = 0) {
         disconnect()
         sessionJob = viewModelScope.launch {
             _ui.update { it.copy(link = Link.Connecting(box.name), connectedBox = box) }
@@ -274,13 +288,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 if (store.receiverToken(box.host) != null) connectReceiver()
                 launch { s.volume.collect { v -> _ui.update { it.copy(volume = v) } } }
                 launch { s.imeShown.collect { _openKeyboard.trySend(Unit) } }
+                val connectedAt = SystemClock.elapsedRealtime()
                 s.closed.collectLatest { reason ->
                     if (reason != null && session === s) {
                         session = null
                         if (LiveLinks.wifi === s) LiveLinks.wifi = null
                         closeReceiver()
-                        _ui.update { it.copy(link = Link.None, volume = null) }
-                        notify(str(R.string.msg_connection_lost, box.name))
+                        // A link that worked for a while starts a new series of reconnects.
+                        val next = if (SystemClock.elapsedRealtime() - connectedAt > STABLE_LINK_MS) 1 else attempt + 1
+                        if (next <= MAX_RECONNECTS) {
+                            // Reconnect without a message. Most drops are short Wi-Fi gaps.
+                            _ui.update { it.copy(link = Link.Connecting(box.name), volume = null) }
+                            reconnectJob = viewModelScope.launch {
+                                kotlinx.coroutines.delay(RECONNECT_DELAY_MS * next)
+                                if (session == null && _ui.value.connectedBox?.host == box.host) {
+                                    connectWifi(box, quiet = true, attempt = next)
+                                }
+                            }
+                        } else {
+                            _ui.update { it.copy(link = Link.None, volume = null) }
+                            notify(str(R.string.msg_connection_lost_reason, box.name, reason.message ?: reason.javaClass.simpleName))
+                        }
                     }
                 }
             } catch (e: CertificateMismatchException) {
@@ -293,7 +321,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 notify(pairingMessage(e))
             } catch (e: Exception) {
                 _ui.update { it.copy(link = Link.None, connectedBox = null, codeRequest = null) }
-                if (!quiet) notify(str(R.string.msg_cannot_connect, box.name, e.message ?: e.javaClass.simpleName))
+                val detail = e.message ?: e.javaClass.simpleName
+                when {
+                    attempt > 0 -> notify(str(R.string.msg_connection_lost_reason, box.name, detail))
+                    !quiet -> notify(str(R.string.msg_cannot_connect, box.name, detail))
+                }
             }
         }
     }
@@ -418,7 +450,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Sends a key. Returns false if no box is connected. */
     fun press(key: RemoteKey): Boolean {
         when (transport) {
-            Transport.WIFI -> session?.sendKey(key.atvCode) ?: return false
+            Transport.WIFI -> {
+                val s = session ?: return false
+                // NVIDIA SHIELD ignores the Settings key code, so open the settings with an app link there.
+                if (key == RemoteKey.SETTINGS && s.isNvidia) s.launchAppLink(Remote.SETTINGS_LINK) else s.sendKey(key.atvCode)
+            }
             Transport.BLUETOOTH -> {
                 val sent = when (val action = key.hid) {
                     is HidAction.Keyboard -> hid.pressKey(action.usage)
@@ -449,14 +485,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Called when the keyboard sheet opens, so that the text diff starts empty. */
     fun resetText() { lastSentText = "" }
 
-    /** Sends the full text of the phone text field to the box. */
+    /**
+     * Sends the change of the phone text field to the box. Both transports add text at the cursor, so the box gets
+     * one Delete for each removed character and then only the new characters.
+     */
     fun setText(text: String) {
         when (transport) {
-            Transport.WIFI -> session?.sendText(text)
+            Transport.WIFI -> {
+                val s = session ?: return
+                val change = TextChange.of(lastSentText, text)
+                repeat(change.deletes) { s.sendKey(RemoteKey.DELETE.atvCode) }
+                s.sendText(change.insert)
+            }
             Transport.BLUETOOTH -> {
-                val common = lastSentText.commonPrefixWith(text).length
-                repeat(lastSentText.length - common) { hid.pressKey(com.tvboxremote.app.bluetooth.KeyUsage.BACKSPACE) }
-                val skipped = hid.type(text.substring(common))
+                val change = TextChange.of(lastSentText, text)
+                repeat(change.deletes) { hid.pressKey(com.tvboxremote.app.bluetooth.KeyUsage.BACKSPACE) }
+                val skipped = hid.type(change.insert)
                 if (skipped > 0) notify(str(R.string.msg_bt_us_only))
             }
             null -> return
@@ -708,6 +752,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun closeWifi() {
+        // An automatic reconnect must not start after the user disconnected or chose another device.
+        // A reconnect that calls connectWifi cancels its own job here, after its last suspension point.
+        reconnectJob?.cancel()
+        reconnectJob = null
         sessionJob?.cancel()
         sessionJob = null
         pendingCode?.complete(null)

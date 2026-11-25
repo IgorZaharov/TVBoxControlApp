@@ -137,6 +137,8 @@
     <string name="msg_bt_lost">Bluetooth connection lost.</string>
     <string name="msg_box_removed">%1$s removed. Pair again to use it.</string>
     <string name="msg_connection_lost">Connection to %1$s lost.</string>
+    <string name="msg_connection_lost_reason">Connection to %1$s lost: %2$s</string>
+    <string name="mouse_use_bluetooth">Connect with Bluetooth</string>
     <string name="msg_new_certificate">%1$s has a new certificate. Forget the box and pair again.</string>
     <string name="msg_cannot_connect">Cannot connect to %1$s: %2$s</string>
     <string name="msg_key_not_on_bt">%1$s is not available over Bluetooth.</string>

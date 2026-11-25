@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
@@ -59,7 +61,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 @Composable
-fun MouseScreen(vm: MainViewModel, onDone: () -> Unit) {
+fun MouseScreen(vm: MainViewModel, onDone: () -> Unit, onBluetooth: () -> Unit) {
     val context = LocalContext.current
     val view = LocalView.current
     val ui by vm.ui.collectAsState()
@@ -140,7 +142,7 @@ fun MouseScreen(vm: MainViewModel, onDone: () -> Unit) {
                     )
                 }
             } else {
-                MouseUnavailable(ui.receiver, transport, onRetry = vm::connectReceiver)
+                MouseUnavailable(ui.receiver, transport, onRetry = vm::connectReceiver, onBluetooth = onBluetooth)
             }
         }
 
@@ -173,7 +175,7 @@ private fun ClickBar(enabled: Boolean, modifier: Modifier, onClick: () -> Unit) 
 }
 
 @Composable
-private fun MouseUnavailable(state: ReceiverState, transport: Transport?, onRetry: () -> Unit) {
+private fun MouseUnavailable(state: ReceiverState, transport: Transport?, onRetry: () -> Unit, onBluetooth: () -> Unit) {
     Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         val text = when {
             transport == null -> stringResource(R.string.mouse_connect_first)
@@ -181,13 +183,19 @@ private fun MouseUnavailable(state: ReceiverState, transport: Transport?, onRetr
             state is ReceiverState.PairRequired -> stringResource(R.string.mouse_enter_code)
             else -> stringResource(R.string.mouse_install_receiver)
         }
-        Text(text, textAlign = TextAlign.Center, fontSize = 16.sp)
+        if (state is ReceiverState.Connecting) {
+            CircularProgressIndicator(color = Palette.accent, modifier = Modifier.padding(bottom = 16.dp).size(32.dp))
+        }
+        Text(text, textAlign = TextAlign.Center, fontSize = 16.sp, color = Palette.onSurface)
         if (state is ReceiverState.Failed) {
             Text(listOfNotNull(stringResource(state.message), state.detail).joinToString("\n"), color = Palette.muted, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
         }
         if (transport == Transport.WIFI && (state is ReceiverState.Failed || state is ReceiverState.Disconnected)) {
             Spacer(Modifier.height(16.dp))
             OutlinedButton(onClick = onRetry) { Text(stringResource(R.string.action_try_again)) }
+            // The phone can be a Bluetooth mouse without the receiver (Android only): open the Bluetooth list.
+            Spacer(Modifier.height(8.dp))
+            TextButton(onClick = onBluetooth) { Text(stringResource(R.string.mouse_use_bluetooth)) }
         }
         Spacer(Modifier.width(1.dp))
     }

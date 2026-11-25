@@ -1,7 +1,12 @@
 import Foundation
 
 /// Features bit mask: ping 1, key 2, IME 4, power 32, volume 64, app link 512.
+/// The session uses the part of these that the box also supports.
 let atvFeatures = 615
+
+/// Opens the system settings through an app link. Some boxes (NVIDIA SHIELD) ignore the Settings key code.
+/// This link is not checked on a box yet.
+let atvSettingsLink = "intent:#Intent;action=android.settings.SETTINGS;launchFlags=0x10000000;end"
 
 // MARK: - Pairing messages (port 6467)
 
@@ -86,10 +91,10 @@ struct PairingResponse {
 // MARK: - Remote messages (port 6466)
 
 enum RemoteMessages {
-    static func configure(model: String, vendor: String) -> Data {
+    static func configure(model: String, vendor: String, features: Int = atvFeatures) -> Data {
         var w = ProtoWriter()
         w.message(1) { c in
-            c.int(1, atvFeatures)
+            c.int(1, features)
             c.message(2) { d in
                 d.string(1, model)
                 d.string(2, vendor)
@@ -102,9 +107,9 @@ enum RemoteMessages {
         return w.data
     }
 
-    static func setActive() -> Data {
+    static func setActive(features: Int = atvFeatures) -> Data {
         var w = ProtoWriter()
-        w.message(2) { a in a.int(1, atvFeatures) }
+        w.message(2) { a in a.int(1, features) }
         return w.data
     }
 
@@ -124,7 +129,8 @@ enum RemoteMessages {
         return w.data
     }
 
-    /// Sets the full text of the focused field on the box.
+    /// Inserts `text` at the cursor of the focused field on the box. The box adds the text to what the field
+    /// has: it does not replace the field. Send only the new characters.
     static func text(_ text: String, imeCounter: Int, fieldCounter: Int) -> Data {
         let position = text.unicodeScalars.count - 1
         var w = ProtoWriter()
@@ -151,7 +157,8 @@ enum RemoteMessages {
 }
 
 enum RemoteEvent: Equatable {
-    case configure
+    /// `features`: the features that the box supports (0 if it did not say). `vendor`: the maker of the box.
+    case configure(features: Int, vendor: String)
     case setActive
     case ping(Int)
     case start(Bool)
@@ -164,8 +171,10 @@ enum RemoteEvent: Equatable {
 
     init(_ data: Data) throws {
         let fields = try ProtoReader.fields(data)
-        if fields.has(1) {
-            self = .configure
+        if let configure = fields.first(1) {
+            let inner = try ProtoReader.fields(configure.bytes)
+            let info = try inner.first(2).map { try ProtoReader.fields($0.bytes) }
+            self = .configure(features: inner.first(1)?.intValue ?? 0, vendor: info?.first(2)?.stringValue ?? "")
         } else if fields.has(2) {
             self = .setActive
         } else if let ping = fields.first(8) {

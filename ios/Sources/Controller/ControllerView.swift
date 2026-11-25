@@ -128,23 +128,35 @@ struct ControllerLayoutEditor: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            HStack(spacing: 8) {
-                // Closes without saving the changes.
-                Button(L10n.t("action.cancel")) { dismiss() }
-                    .buttonStyle(.bordered)
-                Button(L10n.t("action.reset")) { controller.resetLayout() }
-                    .buttonStyle(.bordered)
-                Button(L10n.t("action.done")) {
-                    controller.saveLayout()
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
+            // The labels never wrap: in a long language the buttons go under each other.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) { editorButtons }
+                VStack(spacing: 8) { editorButtons }
             }
             .controlSize(.small)
         }
         .padding(14)
-        .frame(width: 300)
+        .frame(width: 340)
         .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.ultraThinMaterial))
+    }
+
+    @ViewBuilder private var editorButtons: some View {
+        // Closes without saving the changes.
+        Button(L10n.t("action.cancel")) { dismiss() }
+            .buttonStyle(.bordered)
+            .lineLimit(1)
+            .fixedSize()
+        Button(L10n.t("action.reset")) { controller.resetLayout() }
+            .buttonStyle(.bordered)
+            .lineLimit(1)
+            .fixedSize()
+        Button(L10n.t("action.done")) {
+            controller.saveLayout()
+            dismiss()
+        }
+        .buttonStyle(.borderedProminent)
+        .lineLimit(1)
+        .fixedSize()
     }
 }
 

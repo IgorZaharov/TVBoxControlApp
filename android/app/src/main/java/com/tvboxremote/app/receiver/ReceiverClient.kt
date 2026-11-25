@@ -55,6 +55,7 @@ class ReceiverClient(
 
     fun start() {
         _state.value = ReceiverState.Connecting
+        val startedAt = System.currentTimeMillis()
         scope.launch {
             try {
                 val s = Socket()
@@ -74,6 +75,9 @@ class ReceiverClient(
                 launch { pingLoop() }
                 readLoop(BufferedReader(InputStreamReader(s.getInputStream(), Charsets.UTF_8)))
             } catch (e: Exception) {
+                // A refused connection fails at once. Show "Connecting" for a moment, so that Try again visibly works.
+                val wait = MIN_CONNECTING_MS - (System.currentTimeMillis() - startedAt)
+                if (wait > 0) delay(wait)
                 fail(e.message ?: "Connection failed")
             }
         }
@@ -154,6 +158,10 @@ class ReceiverClient(
             _state.value = ReceiverState.Failed(com.tvboxremote.app.R.string.receiver_failed, message)
         }
         close(keepState = true)
+    }
+
+    private companion object {
+        const val MIN_CONNECTING_MS = 800L
     }
 
     fun close(keepState: Boolean = false) {

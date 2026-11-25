@@ -101,8 +101,11 @@ final class ProtoTests: XCTestCase {
         XCTAssertEqual(try RemoteEvent(volume.data), .volume(level: 35, max: 100, muted: true))
 
         var configure = ProtoWriter()
-        configure.message(1) { c in c.int(1, 622) }
-        XCTAssertEqual(try RemoteEvent(configure.data), .configure)
+        configure.message(1) { c in
+            c.int(1, 622)
+            c.message(2) { d in d.string(1, "SHIELD Android TV"); d.string(2, "NVIDIA") }
+        }
+        XCTAssertEqual(try RemoteEvent(configure.data), .configure(features: 622, vendor: "NVIDIA"))
     }
 
     func testTextMessageEncoding() throws {
@@ -124,5 +127,35 @@ final class ProtoTests: XCTestCase {
         let key = try ProtoReader.fields(try XCTUnwrap(top.first(10)).bytes)
         XCTAssertEqual(key.first(1)?.intValue, 23)
         XCTAssertEqual(key.first(2)?.intValue, 3)
+    }
+
+    // The bug: "test" became "ttetestest" on the box, because each change sent the whole field.
+    func testTypingSendsOnlyTheNewLetter() {
+        var box = ""
+        var sent = ""
+        for field in ["t", "te", "tes", "test"] {
+            let change = TextChange(from: sent, to: field)
+            box = String(box.dropLast(change.deletes)) + change.insert
+            sent = field
+        }
+        XCTAssertEqual(box, "test")
+    }
+
+    func testTextChangeDeleteAndReplace() {
+        XCTAssertEqual(TextChange(from: "test", to: "tes"), TextChange(from: "x", to: ""))
+        let replace = TextChange(from: "test", to: "text")
+        XCTAssertEqual(replace.deletes, 2)
+        XCTAssertEqual(replace.insert, "xt")
+        XCTAssertEqual(TextChange(from: "test", to: "").deletes, 4)
+        XCTAssertEqual(TextChange(from: "a😀", to: "a😃").deletes, 1)
+    }
+
+    func testConfigureReadsVendor() throws {
+        var configure = ProtoWriter()
+        configure.message(1) { c in
+            c.int(1, 615)
+            c.message(2) { d in d.string(2, "Google") }
+        }
+        XCTAssertEqual(try RemoteEvent(configure.data), .configure(features: 615, vendor: "Google"))
     }
 }

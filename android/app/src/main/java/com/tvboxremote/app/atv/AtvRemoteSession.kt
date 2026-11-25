@@ -37,6 +37,11 @@ class AtvRemoteSession(
 
     @Volatile private var imeCounter = 0
     @Volatile private var fieldCounter = 0
+    @Volatile private var features = Remote.FEATURES
+
+    /** The maker of the box, from its configure message (for example "NVIDIA"). Empty until the box sends it. */
+    @Volatile var boxVendor: String = ""
+        private set
 
     private val _ready = MutableStateFlow(false)
     /** True after the box sent set-active. Keys sent before this can be lost. */
@@ -76,9 +81,16 @@ class AtvRemoteSession(
 
     private fun handle(c: AtvConnection, m: ProtoMessage) {
         when {
-            m.has(Remote.F_CONFIGURE) -> c.send(Remote.configure(model, vendor, appVersion))
+            m.has(Remote.F_CONFIGURE) -> {
+                val box = m.message(Remote.F_CONFIGURE)
+                // Use only the features that the box also supports, as the box expects.
+                val supported = box?.int(1) ?: 0
+                if (supported != 0) features = Remote.FEATURES and supported
+                boxVendor = box?.message(2)?.string(2) ?: ""
+                c.send(Remote.configure(model, vendor, appVersion, features))
+            }
             m.has(Remote.F_SET_ACTIVE) -> {
-                c.send(Remote.setActive())
+                c.send(Remote.setActive(features))
                 _ready.value = true
             }
             m.has(Remote.F_PING_REQUEST) -> c.send(Remote.pingResponse(m.message(Remote.F_PING_REQUEST)?.int(1) ?: 0))
@@ -97,8 +109,13 @@ class AtvRemoteSession(
 
     fun sendKey(keyCode: Int, direction: Int = Remote.DIRECTION_SHORT) = post(Remote.key(keyCode, direction))
 
-    /** Replaces the text of the focused field on the box. */
-    fun sendText(text: String) = post(Remote.text(imeCounter, fieldCounter, text))
+    /** Inserts [text] at the cursor of the focused field on the box. */
+    fun sendText(text: String) {
+        if (text.isNotEmpty()) post(Remote.text(imeCounter, fieldCounter, text))
+    }
+
+    /** True for an NVIDIA box, which ignores the Settings key code. */
+    val isNvidia: Boolean get() = boxVendor.contains("nvidia", ignoreCase = true)
 
     fun launchAppLink(link: String) = post(Remote.appLink(link))
 

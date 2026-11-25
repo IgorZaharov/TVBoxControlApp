@@ -87,28 +87,38 @@ object Remote {
     const val F_SET_VOLUME_LEVEL = 50
     const val F_APP_LINK = 90
 
-    /** Ping, key, IME, power, volume, app link. */
+    /** Ping, key, IME, power, volume, app link. The session uses the part of these that the box also supports. */
     const val FEATURES = 1 or 2 or 4 or 32 or 64 or 512
+
+    /**
+     * Opens the system settings through an app link. Some boxes (NVIDIA SHIELD) ignore the Settings key code.
+     * This link is not checked on a box yet.
+     */
+    const val SETTINGS_LINK = "intent:#Intent;action=android.settings.SETTINGS;launchFlags=0x10000000;end"
 
     const val DIRECTION_START_LONG = 1
     const val DIRECTION_END_LONG = 2
     const val DIRECTION_SHORT = 3
 
-    fun configure(model: String, vendor: String, appVersion: String) = ProtoWriter().message(F_CONFIGURE) {
-        int(1, FEATURES)
+    fun configure(model: String, vendor: String, appVersion: String, features: Int = FEATURES) = ProtoWriter().message(F_CONFIGURE) {
+        int(1, features)
         message(2) {
             string(1, model); string(2, vendor); int(3, 1); string(4, "1")
             string(5, "atvremote"); string(6, appVersion)
         }
     }.toByteArray()
 
-    fun setActive() = ProtoWriter().message(F_SET_ACTIVE) { int(1, FEATURES) }.toByteArray()
+    fun setActive(features: Int = FEATURES) = ProtoWriter().message(F_SET_ACTIVE) { int(1, features) }.toByteArray()
 
     fun pingResponse(value: Int) = ProtoWriter().message(F_PING_RESPONSE) { int(1, value) }.toByteArray()
 
     fun key(keyCode: Int, direction: Int = DIRECTION_SHORT) =
         ProtoWriter().message(F_KEY_INJECT) { int(1, keyCode); int(2, direction) }.toByteArray()
 
+    /**
+     * Inserts [text] at the cursor of the focused field on the box. The box adds the text to what the field
+     * has: it does not replace the field. Send only the new characters.
+     */
     fun text(imeCounter: Int, fieldCounter: Int, text: String): ByteArray {
         val end = text.length - 1
         return ProtoWriter().message(F_IME_BATCH_EDIT) {

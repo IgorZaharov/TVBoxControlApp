@@ -19,6 +19,15 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.findRootCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.unit.toSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -104,28 +113,45 @@ private val lightGrain: ImageBitmap by lazy { grain(light = true) }
  */
 @Composable
 fun Modifier.remoteBackground(): Modifier {
-    // The leather tile (res/drawable-nodpi, made by tools/make_leather.py) is 384 px for 128 dp: scale it to the screen.
+    val leather = rememberLeatherBrush()
+    return drawBehind { drawAppBackground(leather, size) }
+}
+
+/** The leather tile (res/drawable-nodpi, made by tools/make_leather.py) is 384 px for 128 dp: scale it to the screen. */
+@Composable
+private fun rememberLeatherBrush(): ShaderBrush {
     val leather = ImageBitmap.imageResource(R.drawable.leather_grain)
     val density = LocalDensity.current.density
-    val leatherBrush = remember(leather, density) {
+    return remember(leather, density) {
         val shader = android.graphics.BitmapShader(
             leather.asAndroidBitmap(), android.graphics.Shader.TileMode.REPEAT, android.graphics.Shader.TileMode.REPEAT,
         )
         shader.setLocalMatrix(android.graphics.Matrix().apply { setScale(density / 3f, density / 3f) })
         ShaderBrush(shader)
     }
-    return drawBehind {
-        drawRect(Brush.verticalGradient(listOf(Palette.backgroundTop, Palette.backgroundBottom)))
+}
+
+/**
+ * Draws the app background of a screen of [screen] size, as it lies under a box at [origin] (root coordinates).
+ * The screen draws it at the origin. A glass card draws the part under itself and blurs it.
+ */
+private fun DrawScope.drawAppBackground(leather: ShaderBrush, screen: Size, origin: Offset = Offset.Zero) {
+    translate(-origin.x, -origin.y) {
+        drawRect(
+            Brush.verticalGradient(listOf(Palette.backgroundTop, Palette.backgroundBottom), endY = screen.height),
+            size = screen,
+        )
         drawRect(
             Brush.radialGradient(
                 listOf(Palette.accent.copy(alpha = 0.07f), Color.Transparent),
-                center = Offset(size.width / 2f, 0f),
-                radius = size.width * 0.7f,
-            )
+                center = Offset(screen.width / 2f, 0f),
+                radius = screen.width * 0.7f,
+            ),
+            size = screen,
         )
-        drawRect(leatherBrush, alpha = if (Palette.isDark) 1f else 0.55f)
+        drawRect(leather, size = screen, alpha = if (Palette.isDark) 1f else 0.55f)
         val tile = if (Palette.isDark) darkGrain else lightGrain
-        drawRect(ShaderBrush(ImageShader(tile, TileMode.Repeated, TileMode.Repeated)))
+        drawRect(ShaderBrush(ImageShader(tile, TileMode.Repeated, TileMode.Repeated)), size = screen)
     }
 }
 
@@ -401,12 +427,45 @@ fun rememberPressAnimation(): PressAnimation {
 
 // ---------------------------------------------------------------- glass card
 
+/** How much a glass card blurs the background under it. */
+private val GlassBlur = 16.dp
+
 /**
- * A matte glass card (docs/UI_SPEC.md, "Glass card"): a soft drop shadow, a translucent white fill and a thin
- * border. Android has no backdrop blur here, so the grain of the background shows through the fill.
- * The shadow is drawn only outside the card, so it does not darken the translucent fill.
+ * A frosted glass card (docs/UI_SPEC.md, "Glass card"): a soft drop shadow, the background under the card blurred,
+ * a mostly opaque fill and a thin border. The background does not move, so the card draws the part of it that
+ * lies under the card and blurs that (Android 12 and later). On older versions the texture stays sharp under the fill.
  */
-fun Modifier.glassSurface(shape: Shape): Modifier = drawBehind {
+@Composable
+fun GlassBox(shape: Shape, modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
+    val leather = rememberLeatherBrush()
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    var screen by remember { mutableStateOf(Size.Zero) }
+    Box(modifier.glassShadow(shape)) {
+        Box(
+            Modifier
+                .matchParentSize()
+                .onGloballyPositioned { c ->
+                    origin = c.positionInRoot()
+                    screen = c.findRootCoordinates().size.toSize()
+                }
+                .graphicsLayer {
+                    val r = GlassBlur.toPx()
+                    renderEffect = BlurEffect(r, r, TileMode.Clamp)
+                    this.shape = shape
+                    clip = true
+                }
+                .drawBehind { if (screen != Size.Zero) drawAppBackground(leather, screen, origin) },
+        )
+        Box(Modifier.matchParentSize().glassFill(shape))
+        content()
+    }
+}
+
+/** The glass card without the blur: shadow, fill and border. */
+fun Modifier.glassSurface(shape: Shape): Modifier = glassShadow(shape).glassFill(shape)
+
+/** The drop shadow of a glass card. It is drawn only outside the card, so it does not darken the fill. */
+private fun Modifier.glassShadow(shape: Shape): Modifier = drawBehind {
     val path = shape.createOutline(size, layoutDirection, this).toPath()
     val dark = Palette.isDark
     clipPath(path, ClipOp.Difference) {
@@ -418,10 +477,16 @@ fun Modifier.glassSurface(shape: Shape): Modifier = drawBehind {
             drawPath(path, Color.Black.copy(alpha = 0.06f), style = Stroke(width = 2.dp.toPx()))
         }
     }
+}
+
+/** The fill and the border of a glass card: mostly opaque, so the text stays clear over the background. */
+private fun Modifier.glassFill(shape: Shape): Modifier = drawBehind {
+    val path = shape.createOutline(size, layoutDirection, this).toPath()
+    val dark = Palette.isDark
     val fill = if (dark) {
-        listOf(Color.White.copy(alpha = 0.07f), Color.White.copy(alpha = 0.03f))
+        listOf(Color(0xFF262930).copy(alpha = 0.80f), Color(0xFF1B1D23).copy(alpha = 0.74f))
     } else {
-        listOf(Color.White.copy(alpha = 0.78f), Color.White.copy(alpha = 0.64f))
+        listOf(Color.White.copy(alpha = 0.90f), Color.White.copy(alpha = 0.82f))
     }
     drawPath(path, Brush.verticalGradient(fill))
     // The border: 1 dp inside the edge (a 2 dp stroke, clipped to the card).

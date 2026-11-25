@@ -115,12 +115,12 @@ message RemoteSetVolumeLevel { uint32 volume_max = 6; uint32 volume_level = 7; b
 message RemoteAppLinkLaunchRequest { string app_link = 1; }
 ```
 
-Features bit mask: ping 1, key 2, IME 4, power 32, volume 64, app link 512. The apps use `615` (all of these).
+Features bit mask: ping 1, key 2, IME 4, power 32, volume 64, app link 512. The apps support `615` (all of these). They use the part of it that the box also gives in `code1` of its `remote_configure`.
 
 Session sequence:
 
-1. Box sends `remote_configure`. Phone answers `remote_configure { code1: 615, device_info: { model, vendor, unknown1: 1, unknown2: "1", package_name: "atvremote", app_version: "1.0.0" } }`.
-2. Box sends `remote_set_active`. Phone answers `remote_set_active { active: 615 }`.
+1. Box sends `remote_configure` with its features in `code1` and its `device_info` (the vendor tells an NVIDIA box). Phone answers `remote_configure { code1: 615 AND box features, device_info: { model, vendor, unknown1: 1, unknown2: "1", package_name: "atvremote", app_version: "1.0.0" } }`.
+2. Box sends `remote_set_active`. Phone answers `remote_set_active { active: <the same features> }`.
 3. Box sends `remote_start { started }`. `started` tells if the box is on.
 4. Box sends `remote_ping_request { val1 }` about every 5 seconds. Phone must answer `remote_ping_response { val1 }`. If no ping comes for 16 seconds, the connection is dead.
 5. Box sends `remote_set_volume_level` when the volume changes.
@@ -151,16 +151,21 @@ The key codes are the Android `KeyEvent` codes:
 | TV input | 178 | Assistant | 219 |
 | All apps | 284 | | |
 
+NVIDIA SHIELD ignores key 176 (Settings). For a box with the vendor "NVIDIA", the Settings button sends the app link `intent:#Intent;action=android.settings.SETTINGS;launchFlags=0x10000000;end` instead. This link is not checked on a box yet.
+
 ### Text
 
-To set the text of the focused field on the box, the phone sends the full text:
+The box inserts the text of a batch edit at the cursor of the focused field. It does not replace the field. If the phone sent the full field after each change, "test" became "ttetestest" on the box. Thus the phone sends only the change:
+
+1. For each character that the user removed at the end, the phone sends key 67 (Delete).
+2. Then the phone sends the new characters in one batch edit:
 
 ```
 remote_ime_batch_edit {
   ime_counter: <stored ime_counter>
   field_counter: <stored field_counter>
-  edit_info: [{ insert: 1, text_field_status: { start: len-1, end: len-1, value: "<full text>" } }]
+  edit_info: [{ insert: 1, text_field_status: { start: len-1, end: len-1, value: "<new characters>" } }]
 }
 ```
 
-`len` is the number of characters in the text. To send Enter or Delete, the phone sends key 66 or 67.
+`len` is the number of characters in the value. The phone compares the field with the text that it sent before, from the first character that is different (`TextChange` in both apps). When the phone keyboard opens, that text is empty. When the box opens its keyboard with text in the field, that text is the start. To send Enter, the phone sends key 66.

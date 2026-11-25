@@ -69,8 +69,9 @@ enum Theme {
     static let pressShade = Color.themed(dark: 0x000000, light: 0x000000, darkOpacity: 0.28, lightOpacity: 0.08)
 
     // Matte glass cards of the Preferences screen (docs/UI_SPEC.md, "Glass card").
-    static let glassTop = Color.themed(dark: 0xFFFFFF, light: 0xFFFFFF, darkOpacity: 0.07, lightOpacity: 0.78)
-    static let glassBottom = Color.themed(dark: 0xFFFFFF, light: 0xFFFFFF, darkOpacity: 0.03, lightOpacity: 0.64)
+    // Mostly opaque over the blurred background, so the text stays clear (docs/UI_SPEC.md, "Glass card").
+    static let glassTop = Color.themed(dark: 0x262930, light: 0xFFFFFF, darkOpacity: 0.80, lightOpacity: 0.90)
+    static let glassBottom = Color.themed(dark: 0x1B1D23, light: 0xFFFFFF, darkOpacity: 0.74, lightOpacity: 0.82)
     static let glassBorderTop = Color.themed(dark: 0xFFFFFF, light: 0xFFFFFF, darkOpacity: 0.12, lightOpacity: 1)
     static let glassBorderBottom = Color.themed(dark: 0xFFFFFF, light: 0xFFFFFF, darkOpacity: 0.04, lightOpacity: 1)
     /// The hairline outside the light theme's white border. None in the dark theme.
