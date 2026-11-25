@@ -26,7 +26,7 @@ concurrency:
 jobs:
   ios:
     if: github.event_name == 'push' || inputs.platform != 'android'
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 45
     defaults:
       run:
@@ -36,6 +36,14 @@ jobs:
       BUILD_NUMBER: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
+
+      # App Store Connect accepts only builds made with a recent iOS SDK (Xcode 26 or later now,
+      # Xcode 27 or later from April 2027). Use the newest stable Xcode on the runner.
+      - name: Select the newest Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -viE 'beta|_rc|release.candidate' | sort -V | tail -n 1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
 
       - name: Check the secrets
         env:

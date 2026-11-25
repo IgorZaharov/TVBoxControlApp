@@ -128,7 +128,7 @@ If you change the App IDs or make a new certificate, make the profiles again and
 1. Sign in to https://appstoreconnect.apple.com. Open Apps, click +, and select New App.
 2. Platform: iOS. Name: `Tiny TVBox Remote Control`. Bundle ID: `com.tvboxremote.ios`. SKU: any unique text, for example `tvboxremote-ios`.
 
-The upload fails if this app record does not exist.
+The upload fails if this app record does not exist. Apple also rejects builds made with an old Xcode, so the workflow uses the newest Xcode on the macOS runner.
 
 ### 6. Make the App Store Connect API key
 
