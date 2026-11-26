@@ -19,7 +19,7 @@ struct RemoteView: View {
             topBar
 
             HStack(spacing: 14) {
-                CircleButton(systemImage: "power", label: RemoteKey.power.title, tint: Theme.power, glow: Theme.power) {
+                PowerButton(isOn: model.shownPowerState) {
                     model.press(.power)
                 }
                 Spacer()

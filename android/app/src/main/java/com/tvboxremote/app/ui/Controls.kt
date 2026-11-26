@@ -1,10 +1,15 @@
 package com.tvboxremote.app.ui
 
+import android.util.Log
 import android.view.View
 import android.media.SoundPool
 import android.media.AudioAttributes
 import android.content.Context
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -28,6 +33,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -60,6 +66,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -89,16 +96,40 @@ object Haptics {
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
         pool = SoundPool.Builder().setMaxStreams(3).setAudioAttributes(attributes).build().also { p ->
-            p.setOnLoadCompleteListener { _, _, status -> tapLoaded = status == 0 }
+            p.setOnLoadCompleteListener { _, _, status ->
+                tapLoaded = status == 0
+                Log.i(TAG, "Tap sound loaded, status $status")
+                if (tapLoaded && previewPending) {
+                    previewPending = false
+                    playTap()
+                }
+            }
             tapId = p.load(context.applicationContext, R.raw.tap, 1)
         }
+    }
+
+    /** Plays the tap once, also before it has loaded: when the user turns the sound on in Preferences. */
+    fun preview(context: Context) {
+        if (tapLoaded) playTap() else {
+            previewPending = true
+            loadSound(context)
+        }
+    }
+
+    @Volatile private var previewPending = false
+
+    private fun playTap() {
+        val stream = pool?.play(tapId, TAP_VOLUME, TAP_VOLUME, 1, 0, 1f) ?: 0
+        if (stream == 0) Log.w(TAG, "Tap sound did not play (loaded: $tapLoaded)")
     }
 
     /** The feedback of one press. */
     fun press(view: View) {
         if (enabled) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-        if (sound && tapLoaded) pool?.play(tapId, TAP_VOLUME, TAP_VOLUME, 1, 0, 1f)
+        if (sound && tapLoaded) playTap()
     }
+
+    private const val TAG = "TVBoxRemote"
 
     /** The tap file is already soft (tools/make_tap.py), so it plays at the full media volume. */
     private const val TAP_VOLUME = 1f
@@ -178,6 +209,61 @@ fun RemoteButton(
         Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(Sizes.icon * (size / Sizes.roundButton)))
     }
 }
+
+/**
+ * The power button. Like the power key of an appliance, it shows the state of the box ([on]):
+ * on, a green symbol with a green halo and a lit LED dot; off (standby), a red symbol with a red LED dot;
+ * unknown (null), a red symbol with no LED. The change cross-fades in 300 ms.
+ */
+@Composable
+fun PowerButton(on: Boolean?, label: String, modifier: Modifier = Modifier, size: Dp = Sizes.roundButton, onPress: () -> Unit) {
+    val anim = rememberPressAnimation()
+    val tilt = LocalTilt.current
+    val color by animateColorAsState(
+        if (on == true) Palette.ok else Palette.power, tween(POWER_FADE_MS, easing = FastOutSlowInEasing), label = "power color",
+    )
+    val halo by animateFloatAsState(if (on == true) 1f else 0f, tween(POWER_FADE_MS), label = "power halo")
+    val led by animateFloatAsState(
+        when (on) { true -> 1f; false -> 0.75f; null -> 0f }, tween(POWER_FADE_MS), label = "power led",
+    )
+    val state = on?.let { stringResource(if (it) R.string.power_state_on else R.string.power_state_off) }
+    Box(
+        modifier = modifier
+            .size(size)
+            .graphicsLayer { scaleX = anim.scale; scaleY = anim.scale }
+            .raisedSurface(
+                CircleShape, SurfaceStyle(glow = color, halo = halo),
+                pressed = { anim.press.value }, glow = { anim.glow.value }, tilt = tilt, flash = { anim.flash },
+            )
+            .remotePress(label, animation = anim, onPress = onPress)
+            .semantics { if (state != null) stateDescription = state },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            Icons.Filled.PowerSettingsNew, contentDescription = null,
+            tint = color.copy(alpha = if (on == false) 0.8f else 1f),
+            modifier = Modifier.size(Sizes.icon * (size / Sizes.roundButton)),
+        )
+        // The LED: a 5 dp dot under the symbol with a soft light around it.
+        Box(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = size * 0.14f)
+                .size(5.dp)
+                .drawBehind {
+                    if (led <= 0f) return@drawBehind
+                    val r = this.size.minDimension / 2f
+                    drawCircle(
+                        Brush.radialGradient(listOf(color.copy(alpha = 0.6f * led), Color.Transparent), center = center, radius = r * 3.2f),
+                        radius = r * 3.2f,
+                    )
+                    drawCircle(color.copy(alpha = led), radius = r)
+                },
+        )
+    }
+}
+
+private const val POWER_FADE_MS = 300
 
 /** A round button with a caption under it, for grids. */
 @Composable

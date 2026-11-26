@@ -266,6 +266,8 @@ data class SurfaceStyle(
     val accentBody: Boolean = false,
     /** True for the power button: it glows in the power color. */
     val powerGlow: Boolean = false,
+    /** A steady halo in the glow color, from 0 to 1 (the power button while the box is on). */
+    val halo: Float = 0f,
 ) {
     companion object {
         val Default = SurfaceStyle()
@@ -343,6 +345,7 @@ fun Modifier.raisedSurface(
     // Halo (always on for OK), press glow and press flash, outside the body. They come after the shadow,
     // so the shadow does not darken them.
     if (ok) drawBlurredPath(path, glowColor.copy(alpha = 0.25f + 0.30f * p), 24.dp)
+    if (style.halo > 0f) drawBlurredPath(path, glowColor.copy(alpha = 0.34f * style.halo), 20.dp)
     if (g > 0f) {
         drawBlurredPath(path, glowColor.copy(alpha = 0.55f * g), 18.dp)
     }

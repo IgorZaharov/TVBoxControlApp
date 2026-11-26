@@ -411,6 +411,51 @@ struct CircleButton: View {
     }
 }
 
+/// The power button. Like the power key of an appliance, it shows the state of the box:
+/// on, a green symbol with a green halo and a lit LED dot; off (standby), a red symbol with a red LED dot;
+/// unknown (nil), a red symbol with no LED. The change cross-fades in 300 ms.
+struct PowerButton: View {
+    let isOn: Bool?
+    let action: () -> Void
+
+    private var color: Color { isOn == true ? Theme.ok : Theme.power }
+    private var ledLight: Double {
+        switch isOn {
+        case true?: return 1
+        case false?: return 0.75
+        case nil: return 0
+        }
+    }
+
+    var body: some View {
+        HoldButton(RemoteKey.power.title, scales: true, action: action) { pressed in
+            ZStack {
+                Image(systemName: "power")
+                    .font(.system(size: Theme.iconSize, weight: .semibold))
+                    .foregroundColor(color.opacity(isOn == false ? 0.8 : 1))
+                // The LED: a 5 pt dot under the symbol with a soft light around it.
+                Circle()
+                    .fill(color)
+                    .frame(width: 5, height: 5)
+                    .shadow(color: color.opacity(0.9), radius: 4)
+                    .opacity(ledLight)
+                    .offset(y: Theme.buttonSize * 0.32)
+            }
+            .frame(width: Theme.buttonSize, height: Theme.buttonSize)
+            .background(RaisedSurface(shape: Circle(), pressed: pressed, glow: color))
+            .background(
+                Circle()
+                    .fill(color)
+                    .blur(radius: 12)
+                    .opacity(isOn == true ? 0.34 : 0)
+                    .accessibilityHidden(true)
+            )
+            .animation(.easeOut(duration: 0.3), value: isOn)
+        }
+        .accessibilityValue(isOn.map { L10n.t($0 ? "power.on" : "power.off") } ?? "")
+    }
+}
+
 /// The D-pad ring with OK in the center. A press on an arrow lights an arc
 /// of the ring's inner edge on that side. The ring itself does not move.
 @MainActor

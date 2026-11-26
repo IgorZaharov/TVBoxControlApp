@@ -334,4 +334,6 @@
     <string name="tv_mouse_service">TVBox Remote mouse</string>
     <string name="tv_captions">Субтитри</string>
     <string name="tv_pair_code">Код підключення</string>
+    <string name="power_state_on">Телевізор увімкнено</string>
+    <string name="power_state_off">Телевізор вимкнено</string>
 </resources>

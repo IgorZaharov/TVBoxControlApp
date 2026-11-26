@@ -127,6 +127,7 @@ fun PreferencesScreen(
             SectionTitle(R.string.prefs_section_language)
             GlassCard { LanguageRow() }
 
+            val context = androidx.compose.ui.platform.LocalContext.current
             SectionTitle(R.string.prefs_section_remote)
             GlassCard {
                 ToggleRow(Icons.Filled.Vibration, R.string.prefs_haptics, R.string.prefs_haptics_detail, prefs.haptics) {
@@ -135,6 +136,8 @@ fun PreferencesScreen(
                 Hairline()
                 ToggleRow(Icons.AutoMirrored.Filled.VolumeUp, R.string.prefs_sound, R.string.prefs_sound_detail, prefs.pressSound) {
                     onChange(prefs.copy(pressSound = it))
+                    // Play the tap once, so the user hears what it sounds like and how loud it is.
+                    if (it) Haptics.preview(context)
                 }
                 Hairline()
                 ToggleRow(Icons.Filled.WbSunny, R.string.prefs_screen_on, R.string.prefs_screen_on_detail, prefs.keepScreenOn) {

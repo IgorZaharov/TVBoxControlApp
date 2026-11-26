@@ -360,3 +360,5 @@
 "tv.mouseService" = "TVBox Remote mouse";
 "tv.captions" = "Captions";
 "tv.pairCode" = "Pairing code";
+"power.on" = "TV is on";
+"power.off" = "TV is off";

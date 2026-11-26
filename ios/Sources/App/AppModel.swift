@@ -91,6 +91,11 @@ final class AppModel: ObservableObject {
     @Published var receiverPairingError: String?
     @Published private(set) var volume: VolumeInfo?
     @Published private(set) var boxIsOn: Bool?
+    /// The power state for the power button: what the box reports, only while the Wi-Fi link is up.
+    var shownPowerState: Bool? {
+        if case .connected = connectionState { return boxIsOn }
+        return nil
+    }
     @Published var keyboardText = ""
     /// "Type link on the box" on the mouse screen.
     @Published private(set) var linkTyping: LinkTyping = .idle

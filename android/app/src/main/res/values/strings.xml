@@ -340,4 +340,6 @@
     <string name="tv_mouse_service">TVBox Remote mouse</string>
     <string name="tv_captions">Captions</string>
     <string name="tv_pair_code">Pairing code</string>
+    <string name="power_state_on">TV is on</string>
+    <string name="power_state_off">TV is off</string>
 </resources>

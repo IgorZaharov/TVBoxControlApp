@@ -142,7 +142,17 @@ Every round button and the volume pill have these layers:
 
 While pressed, the body gradient flips (top `#17191E`, bottom `#22252D`), so that the button looks pushed in.
 
-Glow colors: the power button glows in `power`. All other buttons glow in `accent`.
+Glow colors: the power button glows in its state color (below). All other buttons glow in `accent`.
+
+Power state: like the power key of an appliance, the power button on the Remote screen shows the state that the box reports (Android TV Remote `remote_start`).
+
+| State | Symbol | Halo | LED dot (5 dp, under the symbol) |
+|---|---|---|---|
+| On | `ok` green | Steady green halo, 34% | Green, lit |
+| Off (standby) | `power` red, 80% | None | Red, 75% |
+| Unknown (no Wi-Fi link, or no report yet) | `power` red | None | None |
+
+The change cross-fades in 300 ms. Screen readers read the state as "TV is on" or "TV is off".
 
 The OK button body is an accent gradient: top `#6FA2FF`, bottom `#3A74E8`. It has a constant soft accent halo (accent 25%, blur 24). The halo becomes stronger (accent 55%) while the button is pressed.
 
@@ -463,7 +473,7 @@ Five cards, each with a small section title above it (13 pt, semibold, muted, up
    - iOS: iOS keeps the per-app language in the Settings app. A tap opens the page of the app in Settings. The row shows the language that the app uses now.
 3. Remote
    - Haptics (on or off). Default on.
-   - Press sound (on or off). Default off. A soft tap of 50 ms on each button press (`tap.wav`, made by `tools/make_tap.py`, peak -3 dBFS). Both apps play it on the media volume: Android with SoundPool (usage game), iOS with AVAudioPlayer (category playback, mixed with other audio). The user turned the sound on, so silent mode and the ringer or system sound volume do not mute it. Music from other apps keeps playing.
+   - Press sound (on or off). Default off. A soft click, like a computer mouse, on each button press (`tap.wav`, made by `tools/make_tap.py`: a noise burst through resonators at 3.2 and 1.4 kHz, about 15 ms, peak -4 dBFS). When the user turns the sound on, the app plays the tap once. Both apps play it on the media volume: Android with SoundPool (usage game), iOS with AVAudioPlayer (category playback, mixed with other audio). The user turned the sound on, so silent mode and the ringer or system sound volume do not mute it. Music from other apps keeps playing.
    - Keep screen on while the remote is open. Default off.
 4. Pointer
    - Gyro speed: slider from 0.5 to 3.0. Default 1.0.

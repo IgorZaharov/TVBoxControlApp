@@ -91,9 +91,9 @@ fun RemoteScreen(
                 Spacer(Modifier.height(16.dp))
 
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    RemoteButton(
-                        Icons.Filled.PowerSettingsNew, stringResource(R.string.key_power),
-                        tint = Palette.power, style = SurfaceStyle.Power,
+                    PowerButton(
+                        on = state.boxOn.takeIf { state.link is Link.Connected },
+                        label = stringResource(R.string.key_power),
                     ) { onKey(RemoteKey.POWER) }
                     Spacer(Modifier.weight(1f))
                     RemoteButton(Icons.Filled.Keyboard, stringResource(R.string.btn_keyboard), size = 60.dp, onPress = onKeyboard)

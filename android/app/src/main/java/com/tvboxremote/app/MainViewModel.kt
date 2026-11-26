@@ -119,6 +119,8 @@ data class UiState(
     val codeRequest: CodeRequest? = null,
     val pairingStatus: PairingStatus? = null,
     val volume: VolumeState? = null,
+    /** The power state that the box reports (remote_start): true on, false standby, null unknown. */
+    val boxOn: Boolean? = null,
     val receiver: ReceiverState = ReceiverState.Disconnected,
     val hid: HidState = HidState.Idle,
     val connectedBox: TvBox? = null,
@@ -369,6 +371,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 _ui.update { it.copy(link = Link.Connected(box.name, Transport.WIFI)) }
                 if (store.receiverToken(box.host) != null) connectReceiver()
                 launch { s.volume.collect { v -> _ui.update { it.copy(volume = v) } } }
+                launch { s.powerOn.collect { on -> _ui.update { it.copy(boxOn = on) } } }
                 // While the phone waits to type the receiver link, the box keyboard is for the link, not the phone keyboard.
                 launch { s.imeShown.collect { if (_linkTyping.value != LinkTyping.WAITING) _openKeyboard.trySend(Unit) } }
                 val connectedAt = SystemClock.elapsedRealtime()
@@ -381,7 +384,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         val next = if (SystemClock.elapsedRealtime() - connectedAt > STABLE_LINK_MS) 1 else attempt + 1
                         if (next <= MAX_RECONNECTS) {
                             // Reconnect without a message. Most drops are short Wi-Fi gaps.
-                            _ui.update { it.copy(link = Link.Connecting(box.name), volume = null) }
+                            _ui.update { it.copy(link = Link.Connecting(box.name), volume = null, boxOn = null) }
                             reconnectJob = viewModelScope.launch {
                                 kotlinx.coroutines.delay(RECONNECT_DELAY_MS * next)
                                 if (session == null && _ui.value.connectedBox?.host == box.host) {
@@ -389,7 +392,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                 }
                             }
                         } else {
-                            _ui.update { it.copy(link = Link.None, volume = null) }
+                            _ui.update { it.copy(link = Link.None, volume = null, boxOn = null) }
                             notify(str(R.string.msg_connection_lost_reason, box.name, reason.message ?: reason.javaClass.simpleName))
                         }
                     }
@@ -958,7 +961,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         session?.close()
         session = null
         closeReceiver()
-        _ui.update { it.copy(volume = null, connectedBox = null) }
+        _ui.update { it.copy(volume = null, boxOn = null, connectedBox = null) }
     }
 
     fun disconnect() {

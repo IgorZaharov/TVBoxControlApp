@@ -358,3 +358,5 @@
 "tv.mouseService" = "TVBox Remote mouse";
 "tv.captions" = "Субтитри";
 "tv.pairCode" = "Код підключення";
+"power.on" = "Телевізор увімкнено";
+"power.off" = "Телевізор вимкнено";

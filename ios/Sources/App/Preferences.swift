@@ -13,7 +13,11 @@ final class Preferences: ObservableObject {
 
     /// A soft tap sound on each button press. Default off.
     @Published var pressSound: Bool {
-        didSet { defaults.set(pressSound, forKey: Keys.pressSound) }
+        didSet {
+            defaults.set(pressSound, forKey: Keys.pressSound)
+            // Play the tap once, so the user hears what it sounds like and how loud it is.
+            if pressSound && !oldValue { Task { @MainActor in PressSound.play() } }
+        }
     }
 
     @Published var gyroSpeed: Double {
@@ -92,7 +96,7 @@ enum Haptics {
     }
 }
 
-/// The button press sound: tap.wav (made by tools/make_tap.py), a soft 50 ms tap. It plays on the media volume.
+/// The button press sound: tap.wav (made by tools/make_tap.py), a soft click like a computer mouse. It plays on the media volume.
 /// The user turned the sound on in the app, so the ringer volume and the silent switch do not mute it.
 /// The audio session mixes with other apps, so music keeps playing.
 @MainActor
