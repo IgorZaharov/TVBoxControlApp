@@ -15,8 +15,9 @@ final class WidgetRemote {
     private var sessionBoxId: String?
     private var idleTask: Task<Void, Never>?
 
-    /// How long a press waits for the box to be ready.
-    private static let readyTimeout: TimeInterval = 5
+    /// How long a press waits for the box to be ready. A sleeping box sends no configure, and the session
+    /// counts as connected only some seconds after the handshake, so this wait is longer than that.
+    private static let readyTimeout: TimeInterval = 8
     /// How long the connection stays open after the last press. iOS can suspend the extension,
     /// so a long keep-alive does not help, and the connection is checked before each use.
     private static let keepAliveNanos: UInt64 = 8_000_000_000
@@ -79,7 +80,7 @@ final class WidgetRemote {
         session.connect()
     }
 
-    /// Waits until the box accepted the session (configure, then set-active), up to 5 s.
+    /// Waits until the box accepted the session (configure, then set-active), up to 8 s.
     /// If set-active does not come within 1.5 s after configure, the press goes anyway.
     private func waitUntilReady() async -> Bool {
         let deadline = Date().addingTimeInterval(Self.readyTimeout)

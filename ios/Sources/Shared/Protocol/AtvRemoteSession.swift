@@ -13,7 +13,12 @@ final class AtvRemoteSession {
 
     static let defaultPort: UInt16 = 6466
     private static let pingTimeout: TimeInterval = 16
+    /// The time for the TCP connection and the TLS handshake.
     private static let connectTimeout: TimeInterval = 10
+    /// After the TLS handshake, the longest wait for the box to send configure. A box that sleeps (NVIDIA SHIELD,
+    /// for example) accepts the connection but sends configure only when it wakes. After this wait, the session
+    /// counts as connected anyway, as in the Android app, so that a power key can go out and wake the box.
+    private static let configureWait: TimeInterval = 3
 
     var onStateChange: ((State) -> Void)?
     var onVolume: ((VolumeInfo) -> Void)?
@@ -37,6 +42,8 @@ final class AtvRemoteSession {
     private var watchdog: Timer?
     private var lastActivity = Date()
     private var connectStarted = Date()
+    /// When the TLS handshake finished. Nil until then.
+    private var handshakeDone: Date?
     private var ime = ImeCounters()
 
     init(host: String, port: UInt16, identity: SecIdentity, pinnedFingerprint: String?, model: String) {
@@ -60,6 +67,7 @@ final class AtvRemoteSession {
         self.connection = connection
         connectStarted = Date()
         lastActivity = Date()
+        handshakeDone = nil
         isActive = false
         setState(.connecting)
         connection.start()
@@ -123,6 +131,7 @@ final class AtvRemoteSession {
         switch event {
         case .ready:
             lastActivity = Date()
+            handshakeDone = Date()
         case .frame(let data):
             lastActivity = Date()
             handleFrame(data)
@@ -166,7 +175,7 @@ final class AtvRemoteSession {
 
     private func startWatchdog() {
         watchdog?.invalidate()
-        watchdog = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+        watchdog = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             self?.checkAlive()
         }
     }
@@ -174,8 +183,13 @@ final class AtvRemoteSession {
     private func checkAlive() {
         let now = Date()
         switch state {
-        case .connecting where now.timeIntervalSince(connectStarted) > Self.connectTimeout:
-            close(L10n.t("error.session.noAnswer"))
+        case .connecting:
+            if let handshakeDone {
+                // The box can sleep. Keys go out without configure, and the box can still send it later.
+                if now.timeIntervalSince(handshakeDone) > Self.configureWait { setState(.connected) }
+            } else if now.timeIntervalSince(connectStarted) > Self.connectTimeout {
+                close(L10n.t("error.session.noAnswer"))
+            }
         case .connected where now.timeIntervalSince(lastActivity) > Self.pingTimeout:
             close(L10n.t("error.session.stopped"))
         default:

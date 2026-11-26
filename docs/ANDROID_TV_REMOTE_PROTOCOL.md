@@ -128,6 +128,8 @@ Session sequence:
 7. Box sends `remote_ime_show_request` when the on-screen keyboard opens. The phone stores `remote_text_field_status.counter_field` as the field counter, and it can open its own keyboard.
 8. Box sends `remote_ime_batch_edit` when the text of a field changes. The phone takes `ime_counter` and `field_counter` from it only for a counter that steps 6 and 7 did not give.
 
+A box that sleeps (NVIDIA SHIELD, for example) finishes the TLS handshake but sends no `remote_configure` until it wakes. Thus the apps do not need these messages to count the session as connected. The Android app waits at most 5 s for `remote_set_active`, and the iOS app waits at most 3 s for `remote_configure` after the handshake. Then the phone can send a power key that wakes the box.
+
 The box drops a batch edit with old counters. Thus the apps take the counters from the focused field first (`ImeCounters` in both apps), as androidtvremote2 does. An app that read them only from `remote_ime_batch_edit` could not type at all.
 
 ### Keys
