@@ -206,10 +206,10 @@ Each kind of Android build installs over an earlier build of the same kind, and 
 
 The three kinds have the same application ID (`com.tvboxremote.app`) but different signing keys. Thus one kind does not install over another. To change the kind, uninstall the app first. The receiver follows the same rules for its debug and release APKs.
 
-Add the debug key secret once:
+Add the debug key secret once. Run this command in Git Bash, in the repository folder. Windows PowerShell 5.1 changes the text that it pipes to `gh`, and then the workflow cannot decode the key.
 
-```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\.android\debug.keystore")) | gh secret set ANDROID_DEBUG_KEYSTORE_BASE64
+```bash
+base64 -w0 ~/.android/debug.keystore | gh secret set ANDROID_DEBUG_KEYSTORE_BASE64
 ```
 
 If the secret is not set, the workflow shows a warning, and each run signs its debug APKs with a new key. Such an APK does not install over another debug build.

@@ -245,6 +245,10 @@ private struct GuideStepView: View {
                 .foregroundColor(accent.accent)
                 .frame(minHeight: 44)
         case 3:
+            Text(L10n.t("guide4.blocked"))
+                .font(.footnote)
+                .foregroundColor(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
             if mouseState == .connecting { status(L10n.t("guide5.looking")) }
         case 4:
             Text(L10n.t("guide5.gray"))

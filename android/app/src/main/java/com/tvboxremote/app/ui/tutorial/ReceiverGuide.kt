@@ -234,7 +234,10 @@ private fun GuideStep(step: Int, host: ReceiverHost, receiver: ReceiverState, on
                 Text(stringResource(R.string.guide5_gray), fontSize = 13.sp, lineHeight = 18.sp, color = Palette.muted)
                 Status(stringResource(R.string.guide5_looking))
             }
-            3 -> if (receiver is ReceiverState.Connecting) Status(stringResource(R.string.guide5_looking))
+            3 -> {
+                Text(stringResource(R.string.guide4_blocked), fontSize = 13.sp, lineHeight = 18.sp, color = Palette.muted)
+                if (receiver is ReceiverState.Connecting) Status(stringResource(R.string.guide5_looking))
+            }
         }
     }
 }

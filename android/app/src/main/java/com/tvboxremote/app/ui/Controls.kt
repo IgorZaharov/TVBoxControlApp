@@ -83,8 +83,9 @@ object Haptics {
     fun loadSound(context: Context) {
         if (pool != null) return
         val attributes = AudioAttributes.Builder()
-            // Button sounds: the system volume. Silent and vibrate mode mute them.
-            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+            // The media volume, like a game. The user turned the sound on in the app, so the system sound
+            // volume and silent mode (often muted) do not mute it. SoundPool takes no audio focus: music keeps playing.
+            .setUsage(AudioAttributes.USAGE_GAME)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
         pool = SoundPool.Builder().setMaxStreams(3).setAudioAttributes(attributes).build().also { p ->
@@ -99,8 +100,8 @@ object Haptics {
         if (sound && tapLoaded) pool?.play(tapId, TAP_VOLUME, TAP_VOLUME, 1, 0, 1f)
     }
 
-    /** The tap plays at about half of the system volume, so it stays soft. */
-    private const val TAP_VOLUME = 0.5f
+    /** The tap file is already soft (tools/make_tap.py), so it plays at the full media volume. */
+    private const val TAP_VOLUME = 1f
 }
 
 /**

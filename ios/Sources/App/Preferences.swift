@@ -1,4 +1,4 @@
-import AudioToolbox
+import AVFoundation
 import Foundation
 import UIKit
 
@@ -92,17 +92,30 @@ enum Haptics {
     }
 }
 
-/// The button press sound: tap.wav (made by tools/make_tap.py), a soft 35 ms tap. It plays as a system sound,
-/// so it follows the system volume and the silent switch mutes it.
+/// The button press sound: tap.wav (made by tools/make_tap.py), a soft 50 ms tap. It plays on the media volume.
+/// The user turned the sound on in the app, so the ringer volume and the silent switch do not mute it.
+/// The audio session mixes with other apps, so music keeps playing.
 @MainActor
 enum PressSound {
-    private static let soundID: SystemSoundID? = {
-        guard let url = Bundle.main.url(forResource: "tap", withExtension: "wav") else { return nil }
-        var id: SystemSoundID = 0
-        return AudioServicesCreateSystemSoundID(url as CFURL, &id) == 0 ? id : nil
+    /// Three players, so that fast presses do not cut each other off.
+    private static let players: [AVAudioPlayer] = {
+        guard let url = Bundle.main.url(forResource: "tap", withExtension: "wav") else { return [] }
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+        try? session.setActive(true)
+        return (0..<3).compactMap { _ in
+            let player = try? AVAudioPlayer(contentsOf: url)
+            player?.prepareToPlay()
+            return player
+        }
     }()
+    private static var next = 0
 
     static func play() {
-        if let soundID { AudioServicesPlaySystemSound(soundID) }
+        guard !players.isEmpty else { return }
+        let player = players[next]
+        next = (next + 1) % players.count
+        player.currentTime = 0
+        player.play()
     }
 }

@@ -156,7 +156,7 @@
     <string name="prefs_haptics">Haptics</string>
     <string name="prefs_haptics_detail">A short vibration when you press a button.</string>
     <string name="prefs_sound">Press sound</string>
-    <string name="prefs_sound_detail">A soft tap when you press a button. Silent mode mutes it.</string>
+    <string name="prefs_sound_detail">A soft tap when you press a button. The media volume sets how loud it is.</string>
     <string name="prefs_background">Background</string>
     <string name="background_gradient">Gradient</string>
     <string name="background_leather">Leather</string>
@@ -319,6 +319,7 @@
     <string name="guide3_type">Let the phone type it</string>
     <string name="guide4_title">Install the receiver</string>
     <string name="guide4_text">Select Install. If the TV says that it cannot install unknown apps, select Settings, allow Downloader, go back, and select Install again.</string>
+    <string name="guide4_blocked">TV says “App blocked to protect your device”? Select Got it. On the TV, open the Play Store, then your profile, Play Protect and Settings. Turn off Scan apps with Play Protect. Install the receiver again, then turn the scan back on.</string>
     <string name="guide5_title">Turn on the mouse service</string>
     <string name="guide5_text">Open TVBox Remote Receiver. Select Open accessibility settings, then TVBox Remote mouse, and turn it on.</string>
     <string name="guide5_gray">Switch is gray? Open Settings, Apps, TVBox Remote Receiver. In its menu, select Allow restricted settings.</string>

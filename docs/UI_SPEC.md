@@ -396,7 +396,7 @@ A full-screen dim with one card (the coach card style, see "First-run tutorial")
 1. Open Google Play on the TV.
 2. Install Downloader by AFTVnews.
 3. Type the address: the phone's address in 24 sp monospace with an accent outline, and "Waiting for the box". "Let the phone type it" uses Type link on the box. When the box downloads the file, the guide moves on to step 4 by itself.
-4. Select Install, and allow Downloader to install unknown apps if the TV asks.
+4. Select Install, and allow Downloader to install unknown apps if the TV asks. Under the text, a muted hint tells what to do if Google Play Protect blocks the install ("App blocked to protect your device"): turn off Scan apps with Play Protect, install again, then turn the scan back on.
 5. Turn on the mouse service, with the "Allow restricted settings" hint for a gray switch.
 6. Enter the code from the TV. The drawing shows dots, not digits. The phone looks for the receiver every 3 s from step 4. When the receiver asks for its code, the guide moves on to step 6 by itself, and the code dialog opens over it. When the mouse is ready, the guide closes.
 
@@ -463,7 +463,7 @@ Five cards, each with a small section title above it (13 pt, semibold, muted, up
    - iOS: iOS keeps the per-app language in the Settings app. A tap opens the page of the app in Settings. The row shows the language that the app uses now.
 3. Remote
    - Haptics (on or off). Default on.
-   - Press sound (on or off). Default off. A soft tap of 35 ms on each button press (`tap.wav`, made by `tools/make_tap.py`, peak -12 dBFS). Android plays it at half of the system sound volume (SoundPool, sonification). iOS plays it as a system sound. Silent mode mutes it on both.
+   - Press sound (on or off). Default off. A soft tap of 50 ms on each button press (`tap.wav`, made by `tools/make_tap.py`, peak -3 dBFS). Both apps play it on the media volume: Android with SoundPool (usage game), iOS with AVAudioPlayer (category playback, mixed with other audio). The user turned the sound on, so silent mode and the ringer or system sound volume do not mute it. Music from other apps keeps playing.
    - Keep screen on while the remote is open. Default off.
 4. Pointer
    - Gyro speed: slider from 0.5 to 3.0. Default 1.0.

@@ -152,7 +152,7 @@
     <string name="prefs_haptics">Вібровідгук</string>
     <string name="prefs_haptics_detail">Коротка вібрація під час натискання кнопки.</string>
     <string name="prefs_sound">Звук натискання</string>
-    <string name="prefs_sound_detail">Тихий звук під час натискання кнопки. Беззвучний режим вимикає його.</string>
+    <string name="prefs_sound_detail">Тихий звук під час натискання кнопки. Гучність медіа задає його гучність.</string>
     <string name="prefs_background">Фон</string>
     <string name="background_gradient">Градієнт</string>
     <string name="background_leather">Шкіра</string>
@@ -313,6 +313,7 @@
     <string name="guide3_type">Нехай телефон введе її</string>
     <string name="guide4_title">Встановіть приймач</string>
     <string name="guide4_text">Виберіть Встановити. Якщо телевізор каже, що не може встановлювати невідомі застосунки, виберіть Налаштування, дозвольте Downloader, поверніться і знову виберіть Встановити.</string>
+    <string name="guide4_blocked">Телевізор каже «Застосунок заблоковано для захисту пристрою»? Виберіть «Зрозуміло». На телевізорі відкрийте Play Маркет, потім свій профіль, Play Захист і Налаштування. Вимкніть «Перевіряти застосунки за допомогою Play Захисту». Знову встановіть приймач, потім увімкніть перевірку.</string>
     <string name="guide5_title">Увімкніть службу миші</string>
     <string name="guide5_text">Відкрийте TVBox Remote Receiver. Виберіть «Відкрити налаштування спеціальних можливостей», потім TVBox Remote mouse, і увімкніть її.</string>
     <string name="guide5_gray">Перемикач сірий? Відкрийте Налаштування, Застосунки, TVBox Remote Receiver. У його меню виберіть «Дозволити обмежені налаштування».</string>

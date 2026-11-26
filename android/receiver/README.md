@@ -39,6 +39,18 @@ To install it without a computer, open TVBox Remote on the phone, then the mouse
   3. Select Install. If the box asks, allow Downloader to install unknown apps.
 - Type link on the box. On the box, select the address field of a browser or Downloader. When the box keyboard opens, the phone types the link above and presses Enter. Some apps do not take text from the phone. Then use the first way.
 
+### If Play Protect blocks the install
+
+The box can show "App blocked to protect your device", with only a Got it button. Google Play Protect blocks apps that use an accessibility service when they come from a browser, Downloader, a file manager, or a messaging app. The receiver needs an accessibility service to move the cursor, so this block can happen. Play Protect does not block an install over ADB.
+
+To install the receiver without a computer:
+
+1. Select Got it.
+2. On the box, open the Play Store. Open your profile, then Play Protect, then Settings. The menu names can be different on some boxes.
+3. Turn off Scan apps with Play Protect.
+4. Install the receiver again.
+5. Turn Scan apps with Play Protect back on.
+
 Install it from a computer with ADB (Android Debug Bridge):
 
 1. On the box, open Settings, then Device Preferences, then About. Select Build seven times to turn on Developer options.

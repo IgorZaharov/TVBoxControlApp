@@ -277,7 +277,7 @@
 
 /* Preferences: press sound and background */
 "prefs.pressSound" = "Press sound";
-"prefs.pressSound.detail" = "A soft tap when you press a button. The silent switch mutes it.";
+"prefs.pressSound.detail" = "A soft tap when you press a button. The media volume sets how loud it is.";
 "prefs.background" = "Background";
 "prefs.background.gradient" = "Gradient";
 "prefs.background.leather" = "Leather";
@@ -339,6 +339,7 @@
 "guide3.type" = "Let the phone type it";
 "guide4.title" = "Install the receiver";
 "guide4.text" = "Select Install. If the TV says that it cannot install unknown apps, select Settings, allow Downloader, go back, and select Install again.";
+"guide4.blocked" = "TV says “App blocked to protect your device”? Select Got it. On the TV, open the Play Store, then your profile, Play Protect and Settings. Turn off Scan apps with Play Protect. Install the receiver again, then turn the scan back on.";
 "guide5.title" = "Turn on the mouse service";
 "guide5.text" = "Open TVBox Remote Receiver. Select Open accessibility settings, then TVBox Remote mouse, and turn it on.";
 "guide5.gray" = "Switch is gray? Open Settings, Apps, TVBox Remote Receiver. In its menu, select Allow restricted settings.";
