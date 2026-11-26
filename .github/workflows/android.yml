@@ -20,6 +20,22 @@ jobs:
         working-directory: android
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The debug version code is the number of commits (android/build.gradle.kts).
+          fetch-depth: 0
+
+      # A new runner makes a new debug key, and an APK with another key cannot install over the one on the phone.
+      # Thus the debug APKs use the same debug key as local builds (docs/RELEASE_SIGNING.md, "Upgrades").
+      - name: Install the debug key
+        env:
+          ANDROID_DEBUG_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_DEBUG_KEYSTORE_BASE64" ]; then
+            echo "::warning::The secret ANDROID_DEBUG_KEYSTORE_BASE64 is not set. These debug APKs do not install over other debug builds."
+            exit 0
+          fi
+          mkdir -p "$HOME/.android"
+          printf '%s' "$ANDROID_DEBUG_KEYSTORE_BASE64" | tr -d '\r\n ' | base64 --decode > "$HOME/.android/debug.keystore"
 
       - uses: actions/setup-java@v4
         with:
@@ -29,7 +45,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Build, test and lint
-        run: ./gradlew assembleDebug bundleRelease testDebugUnitTest lintDebug --console=plain
+        run: |
+          ./gradlew assembleDebug bundleRelease testDebugUnitTest lintDebug --console=plain
+          echo "versionCode: $(git rev-list --count HEAD)"
 
       - name: Upload the APKs
         uses: actions/upload-artifact@v4

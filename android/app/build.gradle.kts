@@ -23,8 +23,8 @@ android {
         applicationId = "com.tvboxremote.app"
         minSdk = 28
         targetSdk = 35
-        // The release workflow sets VERSION_CODE to its run number, so each upload to Google Play is higher.
-        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
+        // Grows from build to build, so each build upgrades the one before it (android/build.gradle.kts).
+        versionCode = rootProject.extra["appVersionCode"] as Int
         versionName = "1.0.0"
     }
 

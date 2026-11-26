@@ -37,3 +37,6 @@ ios/build/
 *.csr
 *.certSigningRequest
 signing/
+
+# Kotlin compiler sessions
+.kotlin/

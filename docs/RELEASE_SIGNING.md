@@ -25,6 +25,7 @@ Keep all key files outside the repository, for example in `C:\signing`. The repo
 | `ANDROID_KEYSTORE_PASSWORD` | Android | The keystore password |
 | `ANDROID_KEY_ALIAS` | Android | The key alias in the keystore, for example `upload` |
 | `ANDROID_KEY_PASSWORD` | Android | The key password |
+| `ANDROID_DEBUG_KEYSTORE_BASE64` | Android (CI) | Your local debug keystore (`%USERPROFILE%\.android\debug.keystore`), as base64 text. The Android workflow signs the debug APKs with it. |
 
 ## How to add a secret
 
@@ -192,6 +193,31 @@ Google Play does not accept API uploads before the first release exists. Upload 
 1. In Google Play Console, make the app. Name: `Tiny TVBox Remote Control`.
 2. Open Test and release > Testing > Internal testing, and make a new release.
 3. Accept Play App Signing. Upload `app-release.aab` from the workflow artifact `TVBoxRemote-android-release`.
+
+### 4. Upgrades
+
+Each kind of Android build installs over an earlier build of the same kind, and the app keeps its data. An upgrade needs the same application ID, the same signing key, and a version code that is not lower:
+
+| Kind | Made by | Signing key | Version code |
+|---|---|---|---|
+| Debug APK | A local build, or the Android workflow (artifact `TVBoxRemote-android-debug`) | Your local debug key. The workflow gets it from the secret `ANDROID_DEBUG_KEYSTORE_BASE64`. | The number of commits on HEAD |
+| Release APK | The Release workflow (artifact `TVBoxRemote-android-release`) | The upload key | The run number of the Release workflow |
+| Google Play | The Release workflow makes the `.aab`. You upload it. | The Play app signing key (Google Play signs the app) | The run number of the Release workflow |
+
+The three kinds have the same application ID (`com.tvboxremote.app`) but different signing keys. Thus one kind does not install over another. To change the kind, uninstall the app first. The receiver follows the same rules for its debug and release APKs.
+
+Add the debug key secret once:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\.android\debug.keystore")) | gh secret set ANDROID_DEBUG_KEYSTORE_BASE64
+```
+
+If the secret is not set, the workflow shows a warning, and each run signs its debug APKs with a new key. Such an APK does not install over another debug build.
+
+Do not change these rules:
+
+- Never lower a version code. If you rewrite the history of `main` (for example with a squash), the commit count can go down. Then debug builds do not install over earlier ones.
+- Never sign a kind with a different key. Keep the upload keystore and the debug keystore safe.
 
 ## Run the Release workflow
 

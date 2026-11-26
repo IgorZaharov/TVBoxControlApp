@@ -1,6 +1,8 @@
 # Signed release builds. Start it by hand (Actions > Release > Run workflow) or push a tag like v1.0.0.
 # iOS: signs with your Apple Distribution certificate and uploads the app to TestFlight.
 # Android: signs the app bundle (.aab) with your upload key. You upload it to Google Play yourself.
+# It also signs a release APK with the same key, for direct installs. The APK and the bundle have the run number
+# as the version code, so each one installs over the one from an earlier run (docs/RELEASE_SIGNING.md, "Upgrades").
 # Receiver: signs receiver.apk and publishes it as a GitHub release, at a fixed "latest" download link.
 # The secrets it needs are listed in docs/RELEASE_SIGNING.md.
 name: Release
@@ -239,7 +241,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Build the signed app bundle and the receiver
+      - name: Build the signed app bundle, the app APK and the receiver
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -250,13 +252,17 @@ jobs:
           set -euo pipefail
           export ANDROID_KEYSTORE_FILE="$RUNNER_TEMP/upload.jks"
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '\r\n ' | base64 --decode > "$ANDROID_KEYSTORE_FILE"
-          ./gradlew :app:bundleRelease :receiver:assembleRelease --console=plain
+          ./gradlew :app:bundleRelease :app:assembleRelease :receiver:assembleRelease --console=plain
           rm "$ANDROID_KEYSTORE_FILE"
           cp receiver/build/outputs/apk/release/receiver-release.apk receiver.apk
           # The receiver has only APK signature scheme v2 and later (minSdk 24), which jarsigner cannot read.
           APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
           if ! "$APKSIGNER" verify receiver.apk; then
             echo "::error::receiver.apk is not signed."
+            exit 1
+          fi
+          if ! "$APKSIGNER" verify app/build/outputs/apk/release/app-release.apk; then
+            echo "::error::The app APK is not signed."
             exit 1
           fi
           if ! jarsigner -verify app/build/outputs/bundle/release/app-release.aab | grep -q "jar verified"; then
@@ -271,6 +277,7 @@ jobs:
           name: TVBoxRemote-android-release
           path: |
             android/app/build/outputs/bundle/release/app-release.aab
+            android/app/build/outputs/apk/release/app-release.apk
             android/app/build/outputs/mapping/release/mapping.txt
           if-no-files-found: error
 
