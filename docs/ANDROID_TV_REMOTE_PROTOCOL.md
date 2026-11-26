@@ -104,7 +104,7 @@ message RemotePingRequest { int32 val1 = 1; int32 val2 = 2; }
 message RemotePingResponse { int32 val1 = 1; }
 message RemoteKeyInject { int32 key_code = 1; int32 direction = 2; }  // direction: 1 start long, 2 end long, 3 short
 message RemoteImeKeyInject { RemoteAppInfo app_info = 1; RemoteTextFieldStatus text_field_status = 2; }
-message RemoteAppInfo { string app_package = 12; }                       // other fields ignored
+message RemoteAppInfo { int32 counter = 1; string app_package = 12; }   // other fields ignored
 message RemoteImeBatchEdit { int32 ime_counter = 1; int32 field_counter = 2; repeated RemoteEditInfo edit_info = 3; }
 message RemoteEditInfo { int32 insert = 1; RemoteImeObject text_field_status = 2; }
 message RemoteImeObject { int32 start = 1; int32 end = 2; string value = 3; }
@@ -124,8 +124,11 @@ Session sequence:
 3. Box sends `remote_start { started }`. `started` tells if the box is on.
 4. Box sends `remote_ping_request { val1 }` about every 5 seconds. Phone must answer `remote_ping_response { val1 }`. If no ping comes for 16 seconds, the connection is dead.
 5. Box sends `remote_set_volume_level` when the volume changes.
-6. Box sends `remote_ime_batch_edit` when a text field gets focus. The phone stores `ime_counter` and `field_counter`.
-7. Box sends `remote_ime_show_request` when the on-screen keyboard opens. The phone can open its own keyboard.
+6. Box sends `remote_ime_key_inject` when a text field gets focus. The phone stores `app_info.counter` as the IME counter and `text_field_status.counter_field` as the field counter.
+7. Box sends `remote_ime_show_request` when the on-screen keyboard opens. The phone stores `remote_text_field_status.counter_field` as the field counter, and it can open its own keyboard.
+8. Box sends `remote_ime_batch_edit` when the text of a field changes. The phone takes `ime_counter` and `field_counter` from it only for a counter that steps 6 and 7 did not give.
+
+The box drops a batch edit with old counters. Thus the apps take the counters from the focused field first (`ImeCounters` in both apps), as androidtvremote2 does. An app that read them only from `remote_ime_batch_edit` could not type at all.
 
 ### Keys
 
@@ -164,8 +167,8 @@ The box inserts the text of a batch edit at the cursor of the focused field. It 
 remote_ime_batch_edit {
   ime_counter: <stored ime_counter>
   field_counter: <stored field_counter>
-  edit_info: [{ insert: 1, text_field_status: { start: len-1, end: len-1, value: "<new characters>" } }]
+  edit_info: [{ insert: 1, text_field_status: { start: len, end: len, value: "<new characters>" } }]
 }
 ```
 
-`len` is the number of characters in the value. The phone compares the field with the text that it sent before, from the first character that is different (`TextChange` in both apps). When the phone keyboard opens, that text is empty. When the box opens its keyboard with text in the field, that text is the start. To send Enter, the phone sends key 66.
+`len` is the number of characters (code points) in the value: the cursor is after the new text. The phone compares the field with the text that it sent before, from the first character that is different (`TextChange` in both apps). When the phone keyboard opens, that text is empty. When the box opens its keyboard with text in the field, that text is the start. To send Enter, the phone sends key 66.

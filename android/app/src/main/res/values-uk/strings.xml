@@ -64,6 +64,7 @@
     <string name="section_wifi">Wi-Fi</string>
     <string name="section_bluetooth">Bluetooth</string>
     <string name="devices_wifi_searching">Пошук приставок Android TV і Google TV у цій мережі. Телефон і приставка мають бути в одній мережі Wi-Fi.</string>
+    <string name="devices_known">Підключались раніше · %1$s</string>
     <string name="devices_mouse_ready">%1$s · Миша готова</string>
     <string name="devices_add_by_ip">Додати за IP-адресою</string>
     <string name="bt_unavailable">Цей телефон не може працювати як пульт Bluetooth. Використовуйте Wi-Fi.</string>
@@ -72,6 +73,7 @@
     <string name="bt_off">Bluetooth вимкнено.</string>
     <string name="bt_turn_on">Увімкнути Bluetooth</string>
     <string name="bt_none_paired">Ще немає підключених пристроїв Bluetooth.</string>
+    <string name="bt_known">Підключались раніше</string>
     <string name="bt_paired">Підключено раніше</string>
     <string name="bt_searching">Пошук…</string>
     <string name="bt_find_nearby">Знайти поруч</string>

@@ -15,8 +15,32 @@ struct TVBox: Identifiable, Equatable {
     var isManual: Bool
     var receiverHost: String?
     var receiverPort: UInt16?
+    /// The app connected to this box before, or the box is paired. The device list shows it on top, highlighted.
+    var isKnown = false
 
     var mouseReady: Bool { receiverHost != nil }
+
+    /// The order of the device list: the boxes that the app connected to come first, the most recent first
+    /// (`recent`, the box ids). After them come the other paired boxes, then the rest. Each group is sorted by name.
+    /// The result has `isKnown` set.
+    static func knownFirst(_ boxes: [TVBox], recent: [String]) -> [TVBox] {
+        func rank(_ box: TVBox) -> Int {
+            if let index = recent.firstIndex(of: box.id) { return index }
+            return box.isPaired ? recent.count : recent.count + 1
+        }
+        return boxes
+            .map { box -> (rank: Int, box: TVBox) in
+                var known = box
+                let r = rank(box)
+                known.isKnown = r <= recent.count
+                return (r, known)
+            }
+            .sorted { a, b in
+                if a.rank != b.rank { return a.rank < b.rank }
+                return a.box.name.localizedCaseInsensitiveCompare(b.box.name) == .orderedAscending
+            }
+            .map(\.box)
+    }
 }
 
 /// The state of the whole app. It runs on the main actor.
@@ -329,7 +353,11 @@ final class AppModel: ObservableObject {
             connectionState = .connected
             reconnectAttempts = 0
             // The widget lists the boxes that the app connected to, the most recent first.
-            if let id = currentBox?.id { store.markConnected(id) }
+            if let id = currentBox?.id {
+                store.markConnected(id)
+                // The box moves to the top of the device list.
+                rebuildBoxes()
+            }
         case .closed(let message):
             let mismatch = session?.certificateMismatch ?? false
             session = nil
@@ -763,9 +791,7 @@ final class AppModel: ObservableObject {
             updated.receiverPort = receiver.port
             result[id] = updated
         }
-        boxes = result.values.sorted {
-            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-        }
+        boxes = TVBox.knownFirst(Array(result.values), recent: store.recentIds)
 
         guard let current = currentBox, let updated = result[current.id] else { return }
         let hostChanged = updated.host != current.host

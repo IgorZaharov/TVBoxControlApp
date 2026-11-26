@@ -3,6 +3,7 @@ package com.tvboxremote.app
 import com.tvboxremote.app.atv.CertUtil
 import com.tvboxremote.app.atv.ClientIdentity
 import com.tvboxremote.app.atv.FrameDecoder
+import com.tvboxremote.app.atv.ImeCounters
 import com.tvboxremote.app.atv.Pairing
 import com.tvboxremote.app.atv.PairingSecret
 import com.tvboxremote.app.atv.ProtoMessage
@@ -74,9 +75,38 @@ class ProtocolTest {
         val info = edit.message(3)!!
         assertEquals(1, info.int(1))
         val obj = info.message(2)!!
-        assertEquals(2, obj.int(1))
-        assertEquals(2, obj.int(2))
+        assertEquals(3, obj.int(1))
+        assertEquals(3, obj.int(2))
         assertEquals("abc", obj.string(3))
+    }
+
+    @Test
+    fun imeCountersComeFromTheFocusedField() {
+        val counters = ImeCounters()
+        // A batch edit from the box gives the counters when nothing else did.
+        counters.update(ProtoMessage.parse(ProtoWriter().message(Remote.F_IME_BATCH_EDIT) { int(1, 2); int(2, 3) }.toByteArray()))
+        assertEquals(2, counters.ime)
+        assertEquals(3, counters.field)
+
+        // The key inject of a newly focused field: app_info.counter and text_field_status.counter_field.
+        val inject = ProtoWriter().message(Remote.F_IME_KEY_INJECT) {
+            message(1) { int(1, 41); string(12, "com.android.chrome") }
+            message(2) { int(1, 17); string(2, "") }
+        }.toByteArray()
+        assertTrue(counters.update(ProtoMessage.parse(inject)))
+        assertEquals(41, counters.ime)
+        assertEquals(17, counters.field)
+
+        // The keyboard opens on another field: only the field counter changes.
+        val show = ProtoWriter().message(Remote.F_IME_SHOW_REQUEST) { message(2) { int(1, 18) } }.toByteArray()
+        counters.update(ProtoMessage.parse(show))
+        assertEquals(41, counters.ime)
+        assertEquals(18, counters.field)
+
+        // A later batch edit does not replace the counters of the focused field.
+        counters.update(ProtoMessage.parse(ProtoWriter().message(Remote.F_IME_BATCH_EDIT) { int(1, 2); int(2, 3) }.toByteArray()))
+        assertEquals(41, counters.ime)
+        assertEquals(18, counters.field)
     }
 
     @Test

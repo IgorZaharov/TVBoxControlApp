@@ -31,7 +31,7 @@ struct DevicesView: View {
                                 state: model.connectionState
                             )
                         }
-                        .listRowBackground(Theme.surface)
+                        .listRowBackground(KnownRowBackground(known: box.isKnown))
                         .swipeActions {
                             Button(role: .destructive) {
                                 model.forget(box)
@@ -116,7 +116,7 @@ private struct DeviceRow: View {
         HStack(spacing: 14) {
             Image(systemName: "tv")
                 .font(.system(size: 22))
-                .foregroundColor(isCurrent ? accent.accent : Theme.onSurface)
+                .foregroundColor(isCurrent || box.isKnown ? accent.accent : Theme.onSurface)
                 .frame(width: 32)
             VStack(alignment: .leading, spacing: 3) {
                 Text(box.name)
@@ -125,6 +125,11 @@ private struct DeviceRow: View {
                 Text(detail)
                     .font(.caption)
                     .foregroundColor(Theme.muted)
+                if box.isKnown {
+                    Text(L10n.t("devices.known"))
+                        .font(.caption2.weight(.semibold))
+                        .foregroundColor(accent.accent)
+                }
                 if box.mouseReady {
                     Text(L10n.t("devices.mouseReady"))
                         .font(.caption2.weight(.semibold))
@@ -155,5 +160,23 @@ private struct DeviceRow: View {
             parts.append(L10n.t("devices.notSeen"))
         }
         return parts.joined(separator: " · ")
+    }
+}
+
+/// The row background: a box that the app connected to before gets an accent tint and an accent edge.
+private struct KnownRowBackground: View {
+    let known: Bool
+    @Environment(\.accent) private var accent
+
+    var body: some View {
+        if known {
+            ZStack(alignment: .leading) {
+                Theme.surface
+                accent.accent.opacity(0.12)
+                accent.accent.frame(width: 4)
+            }
+        } else {
+            Theme.surface
+        }
     }
 }

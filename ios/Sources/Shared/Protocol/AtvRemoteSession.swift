@@ -37,8 +37,7 @@ final class AtvRemoteSession {
     private var watchdog: Timer?
     private var lastActivity = Date()
     private var connectStarted = Date()
-    private var imeCounter = 0
-    private var fieldCounter = 0
+    private var ime = ImeCounters()
 
     init(host: String, port: UInt16, identity: SecIdentity, pinnedFingerprint: String?, model: String) {
         self.host = host
@@ -104,7 +103,7 @@ final class AtvRemoteSession {
     /// Inserts `text` at the cursor of the focused field on the box.
     func sendText(_ text: String) {
         guard state == .connected, !text.isEmpty else { return }
-        connection?.send(RemoteMessages.text(text, imeCounter: imeCounter, fieldCounter: fieldCounter))
+        connection?.send(RemoteMessages.text(text, imeCounter: ime.ime, fieldCounter: ime.field))
     }
 
     func launch(appLink: String) {
@@ -153,14 +152,14 @@ final class AtvRemoteSession {
             onPower?(started)
         case .volume(let level, let max, let muted):
             onVolume?(VolumeInfo(level: level, max: max, muted: muted))
-        case .imeBatchEdit(let ime, let field):
-            imeCounter = ime
-            fieldCounter = field
+        case .imeBatchEdit, .imeKeyInject:
+            ime.update(event)
             onImeFocus?()
-        case .imeShow(let text):
+        case .imeShow(let text, _):
+            ime.update(event)
             onImeShow?(text)
             onImeFocus?()
-        case .imeKeyInject, .error, .other:
+        case .error, .other:
             break
         }
     }

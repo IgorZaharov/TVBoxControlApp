@@ -331,6 +331,7 @@ The menu button opens a list with these items:
 
 - Section "Wi-Fi": boxes found through `_androidtvremote2._tcp`. Each row shows the name and IP address. If a receiver at the same IP address is found, the row shows "Mouse ready".
 - Section "Bluetooth" (Android only): paired Bluetooth devices, a "Make phone visible" button, and help text.
+- Known devices come first in each section. A known device is one that the app connected to before (the saved devices of the widget, the most recent first), or a paired Wi-Fi box. The row has an accent tint, an accent icon, and the text "Connected before". On Android the row also has a 1 dp accent border. On iOS it has a 4 pt accent edge at the left.
 - A row tap connects. If the box is not paired, pairing starts.
 - "Add by IP address" opens a dialog for a manual IP address.
 - "Forget" (long press or swipe) removes the stored pairing.

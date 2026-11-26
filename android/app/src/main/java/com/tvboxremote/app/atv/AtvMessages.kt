@@ -120,7 +120,8 @@ object Remote {
      * has: it does not replace the field. Send only the new characters.
      */
     fun text(imeCounter: Int, fieldCounter: Int, text: String): ByteArray {
-        val end = text.length - 1
+        // The cursor after the text: the length in code points, as the box counts it.
+        val end = text.codePointCount(0, text.length)
         return ProtoWriter().message(F_IME_BATCH_EDIT) {
             int(1, imeCounter)
             int(2, fieldCounter)
@@ -132,4 +133,46 @@ object Remote {
     }
 
     fun appLink(link: String) = ProtoWriter().message(F_APP_LINK) { string(1, link) }.toByteArray()
+}
+
+/**
+ * The counters that the box expects in a batch edit. The box drops a batch edit with old counters, so the phone
+ * takes them from the focused field, as the box reports it:
+ *
+ * - `remote_ime_key_inject`: `app_info.counter` (the IME counter) and `text_field_status.counter_field`.
+ * - `remote_ime_show_request`: `remote_text_field_status.counter_field`.
+ * - `remote_ime_batch_edit`: only for a counter that the two messages above did not give.
+ */
+class ImeCounters {
+    var ime = 0
+        private set
+    var field = 0
+        private set
+    private var hasIme = false
+    private var hasField = false
+
+    /** Reads the counters from an incoming message. Returns true if it was an IME message. */
+    fun update(m: ProtoMessage): Boolean {
+        when {
+            m.has(Remote.F_IME_KEY_INJECT) -> {
+                val inject = m.message(Remote.F_IME_KEY_INJECT) ?: return true
+                ime = inject.message(1)?.int(1) ?: 0
+                field = inject.message(2)?.int(1) ?: 0
+                hasIme = ime != 0
+                hasField = field != 0
+            }
+            m.has(Remote.F_IME_SHOW_REQUEST) -> {
+                val status = m.message(Remote.F_IME_SHOW_REQUEST)?.message(2) ?: return true
+                field = status.int(1)
+                hasField = true
+            }
+            m.has(Remote.F_IME_BATCH_EDIT) -> {
+                val edit = m.message(Remote.F_IME_BATCH_EDIT) ?: return true
+                if (!hasIme) ime = edit.int(1)
+                if (!hasField) field = edit.int(2)
+            }
+            else -> return false
+        }
+        return true
+    }
 }

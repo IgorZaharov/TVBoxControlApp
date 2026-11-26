@@ -14,6 +14,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -62,6 +63,7 @@ import com.tvboxremote.app.Link
 import com.tvboxremote.app.MainViewModel
 import com.tvboxremote.app.Transport
 import com.tvboxremote.app.bluetooth.HidState
+import com.tvboxremote.app.data.DeviceOrder
 import com.tvboxremote.app.discovery.TvBox
 
 private val BLUETOOTH_PERMISSIONS: Array<String> =
@@ -85,6 +87,11 @@ fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit) {
 
     fun granted() = BLUETOOTH_PERMISSIONS.all { context.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
     var btGranted by remember { mutableStateOf(granted()) }
+    // The devices that the phone connected to before, the most recent first. A new connection changes the link.
+    val saved = remember(ui.link) { vm.store.savedDevices }
+    val recentHosts = saved.mapNotNull { it.host }
+    val recentAddresses = saved.mapNotNull { it.address }
+    val wifiBoxes = DeviceOrder.knownFirst(boxes, recentHosts, key = { it.host }, paired = { vm.store.fingerprint(it.host) != null })
     // Changes when Bluetooth settings may have changed, so the bonded list reloads.
     var btRefresh by remember { mutableIntStateOf(0) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -101,6 +108,7 @@ fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit) {
     LaunchedEffect(btGranted, btRefresh, ui.hid) {
         bonded = if (btGranted) vm.hid.bondedDevices().sortedByDescending { it.looksLikeTv() } else emptyList()
     }
+    val bondedSorted = DeviceOrder.knownFirst(bonded, recentAddresses, key = { it.address })
     DisposableEffect(Unit) { onDispose { vm.scanner.stop() } }
 
     LazyColumn(
@@ -118,11 +126,13 @@ fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit) {
                 HintText(stringResource(R.string.devices_wifi_searching))
             }
         }
-        items(boxes, key = { "wifi-" + it.host }) { box ->
+        items(wifiBoxes, key = { "wifi-" + it.host }) { box ->
             val active = ui.connectedBox?.host == box.host
+            val known = DeviceOrder.isKnown(box.host, recentHosts, vm.store.fingerprint(box.host) != null)
             val status = when {
                 active && ui.link is Link.Connected -> stringResource(R.string.status_connected)
                 active && ui.link is Link.Connecting -> stringResource(R.string.status_connecting)
+                known -> stringResource(R.string.devices_known, box.host)
                 else -> box.host
             }
             DeviceRow(
@@ -130,6 +140,7 @@ fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit) {
                 title = box.name,
                 subtitle = if (box.receiverPort != null) stringResource(R.string.devices_mouse_ready, status) else status,
                 highlighted = active,
+                known = known,
                 onClick = { vm.connectWifi(box); onBack() },
                 onForget = { forgetBox = box },
             )
@@ -164,18 +175,21 @@ fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit) {
             }
             else -> {
                 if (bonded.isEmpty()) item { HintText(stringResource(R.string.bt_none_paired)) }
-                items(bonded, key = { "bt-" + it.address }) { device ->
+                items(bondedSorted, key = { "bt-" + it.address }) { device ->
                     val connected = (ui.hid as? HidState.Connected)?.device?.address == device.address
                     val connecting = (ui.hid as? HidState.Connecting)?.device?.address == device.address
+                    val known = DeviceOrder.isKnown(device.address, recentAddresses)
                     DeviceRow(
                         icon = Icons.Filled.Bluetooth,
                         title = device.name ?: device.address,
                         subtitle = when {
                             connected -> stringResource(R.string.status_connected)
                             connecting -> stringResource(R.string.status_connecting)
+                            known -> stringResource(R.string.bt_known)
                             else -> stringResource(R.string.bt_paired)
                         },
                         highlighted = connected,
+                        known = known,
                         onClick = { vm.connectBluetooth(device); onBack() },
                         onForget = null,
                     )
@@ -276,17 +290,29 @@ private fun DeviceRow(
     highlighted: Boolean,
     onClick: () -> Unit,
     onForget: (() -> Unit)?,
+    /** A device that the phone connected to before: an accent tint and an accent border. */
+    known: Boolean = false,
 ) {
+    val shape = RoundedCornerShape(16.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(shape)
             .background(Palette.surface)
+            .then(
+                if (known) {
+                    Modifier
+                        .background(Palette.accent.copy(alpha = 0.10f))
+                        .border(1.dp, Palette.accent.copy(alpha = 0.45f), shape)
+                } else {
+                    Modifier
+                }
+            )
             .combinedClickable(onClick = onClick, onLongClick = onForget)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, contentDescription = null, tint = if (highlighted) Palette.accent else Palette.onSurface)
+        Icon(icon, contentDescription = null, tint = if (highlighted || known) Palette.accent else Palette.onSurface)
         Column(Modifier.weight(1f).padding(start = 16.dp)) {
             Text(title, fontSize = 16.sp, fontWeight = FontWeight.Medium)
             Text(subtitle, fontSize = 13.sp, color = if (highlighted) Palette.ok else Palette.muted)

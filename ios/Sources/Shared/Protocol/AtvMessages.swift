@@ -132,7 +132,8 @@ enum RemoteMessages {
     /// Inserts `text` at the cursor of the focused field on the box. The box adds the text to what the field
     /// has: it does not replace the field. Send only the new characters.
     static func text(_ text: String, imeCounter: Int, fieldCounter: Int) -> Data {
-        let position = text.unicodeScalars.count - 1
+        // The cursor after the text: the length in code points, as the box counts it.
+        let position = text.unicodeScalars.count
         var w = ProtoWriter()
         w.message(21) { b in
             b.int(1, imeCounter)
@@ -164,8 +165,9 @@ enum RemoteEvent: Equatable {
     case start(Bool)
     case volume(level: Int, max: Int, muted: Bool)
     case imeBatchEdit(imeCounter: Int, fieldCounter: Int)
-    case imeShow(text: String)
-    case imeKeyInject(appPackage: String)
+    /// `fieldCounter`: nil if the request has no field status.
+    case imeShow(text: String, fieldCounter: Int?)
+    case imeKeyInject(appPackage: String, imeCounter: Int, fieldCounter: Int)
     case error
     case other
 
@@ -199,21 +201,67 @@ enum RemoteEvent: Equatable {
         } else if let show = fields.first(22) {
             let inner = try ProtoReader.fields(show.bytes)
             var text = ""
+            var field: Int?
             if let status = inner.first(2) {
-                text = try ProtoReader.fields(status.bytes).first(2)?.stringValue ?? ""
+                let statusFields = try ProtoReader.fields(status.bytes)
+                text = statusFields.first(2)?.stringValue ?? ""
+                field = statusFields.first(1)?.intValue ?? 0
             }
-            self = .imeShow(text: text)
+            self = .imeShow(text: text, fieldCounter: field)
         } else if let inject = fields.first(20) {
             let inner = try ProtoReader.fields(inject.bytes)
             var package = ""
+            var ime = 0
+            var field = 0
             if let app = inner.first(1) {
-                package = try ProtoReader.fields(app.bytes).first(12)?.stringValue ?? ""
+                let appFields = try ProtoReader.fields(app.bytes)
+                package = appFields.first(12)?.stringValue ?? ""
+                ime = appFields.first(1)?.intValue ?? 0
             }
-            self = .imeKeyInject(appPackage: package)
+            if let status = inner.first(2) {
+                field = try ProtoReader.fields(status.bytes).first(1)?.intValue ?? 0
+            }
+            self = .imeKeyInject(appPackage: package, imeCounter: ime, fieldCounter: field)
         } else if fields.has(3) {
             self = .error
         } else {
             self = .other
         }
+    }
+}
+
+/// The counters that the box expects in a batch edit. The box drops a batch edit with old counters, so the phone
+/// takes them from the focused field, as the box reports it:
+///
+/// - `remote_ime_key_inject`: `app_info.counter` (the IME counter) and `text_field_status.counter_field`.
+/// - `remote_ime_show_request`: `remote_text_field_status.counter_field`.
+/// - `remote_ime_batch_edit`: only for a counter that the two messages above did not give.
+struct ImeCounters: Equatable {
+    private(set) var ime = 0
+    private(set) var field = 0
+    private var hasIme = false
+    private var hasField = false
+
+    /// Reads the counters from an incoming event. Returns true if it was an IME event.
+    @discardableResult
+    mutating func update(_ event: RemoteEvent) -> Bool {
+        switch event {
+        case .imeKeyInject(_, let imeCounter, let fieldCounter):
+            ime = imeCounter
+            field = fieldCounter
+            hasIme = imeCounter != 0
+            hasField = fieldCounter != 0
+        case .imeShow(_, let fieldCounter):
+            if let fieldCounter {
+                field = fieldCounter
+                hasField = true
+            }
+        case .imeBatchEdit(let imeCounter, let fieldCounter):
+            if !hasIme { ime = imeCounter }
+            if !hasField { field = fieldCounter }
+        default:
+            return false
+        }
+        return true
     }
 }

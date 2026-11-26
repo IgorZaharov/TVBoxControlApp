@@ -121,3 +121,17 @@ final class ThemeTests: XCTestCase {
         XCTAssertEqual(RemoteView.signalLineHeight(freeHeight: 30), 24)
     }
 }
+
+final class DeviceOrderTests: XCTestCase {
+    private func box(_ id: String, paired: Bool) -> TVBox {
+        TVBox(id: id, name: id, host: nil, port: 6466, isPaired: paired, isDiscovered: true, isManual: false,
+              receiverHost: nil, receiverPort: nil)
+    }
+
+    func testRecentBoxesComeFirstThenPairedThenOthers() {
+        let boxes = [box("A", paired: false), box("B", paired: true), box("C", paired: true), box("D", paired: false), box("E", paired: true)]
+        let order = TVBox.knownFirst(boxes, recent: ["E", "B"])
+        XCTAssertEqual(order.map(\.id), ["E", "B", "C", "A", "D"])
+        XCTAssertEqual(order.map(\.isKnown), [true, true, true, false, false])
+    }
+}

@@ -117,9 +117,45 @@ final class ProtoTests: XCTestCase {
         let edit = try ProtoReader.fields(try XCTUnwrap(batch.first(3)).bytes)
         XCTAssertEqual(edit.first(1)?.intValue, 1)
         let object = try ProtoReader.fields(try XCTUnwrap(edit.first(2)).bytes)
-        XCTAssertEqual(object.first(1)?.intValue, 4)
-        XCTAssertEqual(object.first(2)?.intValue, 4)
+        XCTAssertEqual(object.first(1)?.intValue, 5)
+        XCTAssertEqual(object.first(2)?.intValue, 5)
         XCTAssertEqual(object.first(3)?.stringValue, "héllo")
+    }
+
+    func testImeCountersComeFromTheFocusedField() throws {
+        var counters = ImeCounters()
+        // A batch edit from the box gives the counters when nothing else did.
+        var batch = ProtoWriter()
+        batch.message(21) { b in b.int(1, 2); b.int(2, 3) }
+        counters.update(try RemoteEvent(batch.data))
+        XCTAssertEqual(counters.ime, 2)
+        XCTAssertEqual(counters.field, 3)
+
+        // The key inject of a newly focused field: app_info.counter and text_field_status.counter_field.
+        var inject = ProtoWriter()
+        inject.message(20) { k in
+            k.message(1) { a in a.int(1, 41); a.string(12, "com.android.chrome") }
+            k.message(2) { f in f.int(1, 17) }
+        }
+        let injectEvent = try RemoteEvent(inject.data)
+        XCTAssertEqual(injectEvent, .imeKeyInject(appPackage: "com.android.chrome", imeCounter: 41, fieldCounter: 17))
+        counters.update(injectEvent)
+        XCTAssertEqual(counters.ime, 41)
+        XCTAssertEqual(counters.field, 17)
+
+        // The keyboard opens on another field: only the field counter changes.
+        var show = ProtoWriter()
+        show.message(22) { r in r.message(2) { f in f.int(1, 18); f.string(2, "ab") } }
+        let showEvent = try RemoteEvent(show.data)
+        XCTAssertEqual(showEvent, .imeShow(text: "ab", fieldCounter: 18))
+        counters.update(showEvent)
+        XCTAssertEqual(counters.ime, 41)
+        XCTAssertEqual(counters.field, 18)
+
+        // A later batch edit does not replace the counters of the focused field.
+        counters.update(try RemoteEvent(batch.data))
+        XCTAssertEqual(counters.ime, 41)
+        XCTAssertEqual(counters.field, 18)
     }
 
     func testKeyMessageEncoding() throws {
