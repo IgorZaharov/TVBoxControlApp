@@ -64,6 +64,9 @@ import com.tvboxremote.app.MainViewModel
 import com.tvboxremote.app.Transport
 import com.tvboxremote.app.bluetooth.HidState
 import com.tvboxremote.app.data.DeviceOrder
+import com.tvboxremote.app.ui.tutorial.TourTargets
+import com.tvboxremote.app.ui.tutorial.coachTarget
+import androidx.compose.foundation.lazy.rememberLazyListState
 import com.tvboxremote.app.discovery.TvBox
 
 private val BLUETOOTH_PERMISSIONS: Array<String> =
@@ -75,7 +78,7 @@ private val BLUETOOTH_PERMISSIONS: Array<String> =
 
 @SuppressLint("MissingPermission")
 @Composable
-fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit) {
+fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit, scrollToBluetooth: Boolean = false) {
     val context = LocalContext.current
     val ui by vm.ui.collectAsState()
     val boxes by vm.discovery.boxes.collectAsState()
@@ -111,7 +114,14 @@ fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit) {
     val bondedSorted = DeviceOrder.knownFirst(bonded, recentAddresses, key = { it.address })
     DisposableEffect(Unit) { onDispose { vm.scanner.stop() } }
 
+    // The Bluetooth hint of the mouse walk-through: show the Bluetooth section, so its button is on the screen.
+    val listState = rememberLazyListState()
+    LaunchedEffect(scrollToBluetooth) {
+        if (scrollToBluetooth) listState.animateScrollToItem(3 + maxOf(1, wifiBoxes.size))
+    }
+
     LazyColumn(
+        state = listState,
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -136,6 +146,7 @@ fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit) {
                 else -> box.host
             }
             DeviceRow(
+                modifier = Modifier.coachTarget("${TourTargets.WIFI_ROWS}/${box.host}"),
                 icon = Icons.Filled.Tv,
                 title = box.name,
                 subtitle = if (box.receiverPort != null) stringResource(R.string.devices_mouse_ready, status) else status,
@@ -146,7 +157,7 @@ fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit) {
             )
         }
         item {
-            OutlinedButton(onClick = { showAddDialog = true }, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = { showAddDialog = true }, modifier = Modifier.fillMaxWidth().coachTarget(TourTargets.ADD_BY_IP)) {
                 Text(stringResource(R.string.devices_add_by_ip))
             }
         }
@@ -160,7 +171,7 @@ fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit) {
             !btGranted -> item {
                 Column {
                     HintText(stringResource(R.string.bt_allow_hint))
-                    FilledTonalButton(onClick = { permissionLauncher.launch(BLUETOOTH_PERMISSIONS) }) {
+                    FilledTonalButton(onClick = { permissionLauncher.launch(BLUETOOTH_PERMISSIONS) }, modifier = Modifier.coachTarget(TourTargets.BLUETOOTH)) {
                         Text(stringResource(R.string.bt_allow))
                     }
                 }
@@ -168,9 +179,10 @@ fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit) {
             !vm.hid.isBluetoothOn -> item {
                 Column {
                     HintText(stringResource(R.string.bt_off))
-                    FilledTonalButton(onClick = {
-                        enableLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
-                    }) { Text(stringResource(R.string.bt_turn_on)) }
+                    FilledTonalButton(
+                        onClick = { enableLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)) },
+                        modifier = Modifier.coachTarget(TourTargets.BLUETOOTH),
+                    ) { Text(stringResource(R.string.bt_turn_on)) }
                 }
             }
             else -> {
@@ -208,7 +220,7 @@ fun DevicesScreen(vm: MainViewModel, onBack: () -> Unit) {
                                         .putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120)
                                 )
                             },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).coachTarget(TourTargets.BLUETOOTH),
                         ) { Text(stringResource(R.string.bt_make_visible)) }
                     }
                 }
@@ -284,6 +296,7 @@ fun HintText(text: String) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DeviceRow(
+    modifier: Modifier = Modifier,
     icon: ImageVector,
     title: String,
     subtitle: String,
@@ -295,7 +308,7 @@ private fun DeviceRow(
 ) {
     val shape = RoundedCornerShape(16.dp)
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(shape)
             .background(Palette.surface)

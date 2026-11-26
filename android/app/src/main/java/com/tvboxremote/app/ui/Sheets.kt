@@ -29,6 +29,9 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.size
+import com.tvboxremote.app.PairingStatus
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -145,7 +148,7 @@ fun MediaKeysSheet(onKey: (RemoteKey) -> Unit, onDismiss: () -> Unit) {
 
 /** Asks for the pairing code that the TV shows. */
 @Composable
-fun CodeDialog(request: CodeRequest, onSubmit: (String?) -> Unit) {
+fun CodeDialog(request: CodeRequest, onSubmit: (String?) -> Unit, onAskAgain: () -> Unit = {}) {
     val isAtv = request is CodeRequest.Atv
     val length = if (isAtv) 6 else 4
     val wrong = when (request) {
@@ -182,9 +185,47 @@ fun CodeDialog(request: CodeRequest, onSubmit: (String?) -> Unit) {
                     ),
                     keyboardActions = KeyboardActions(onDone = { if (code.length == length) onSubmit(code) }),
                 )
+                if (isAtv) {
+                    // The TV can miss the request, for example while it sleeps. A new request shows a new code.
+                    Text(stringResource(R.string.pair_no_code), color = Palette.muted, fontSize = 13.sp)
+                    TextButton(onClick = onAskAgain) { Text(stringResource(R.string.pair_ask_again)) }
+                }
             }
         },
         confirmButton = { TextButton(enabled = code.length == length, onClick = { onSubmit(code) }) { Text(stringResource(R.string.action_pair)) } },
         dismissButton = { TextButton(onClick = { onSubmit(null) }) { Text(stringResource(R.string.action_cancel)) } },
+    )
+}
+
+/** The pairing dialog while no code is asked: the phone waits for the TV, or connects after the code. */
+@Composable
+fun PairingStatusDialog(status: PairingStatus, boxName: String, onCancel: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = {},
+        title = { Text(stringResource(if (status == PairingStatus.ASKING) R.string.pair_box_title else R.string.pair_paired_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(
+                        color = if (status == PairingStatus.ASKING) Palette.accent else Palette.ok,
+                        strokeWidth = 2.5.dp,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Text(
+                        if (status == PairingStatus.ASKING) stringResource(R.string.pair_asking)
+                        else stringResource(R.string.pair_connecting, boxName),
+                        fontSize = 15.sp,
+                    )
+                }
+                Text(
+                    stringResource(if (status == PairingStatus.ASKING) R.string.pair_asking_hint else R.string.pair_connecting_hint),
+                    color = Palette.muted, fontSize = 13.sp,
+                )
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            if (status == PairingStatus.ASKING) TextButton(onClick = onCancel) { Text(stringResource(R.string.action_cancel)) }
+        },
     )
 }

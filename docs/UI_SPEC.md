@@ -338,7 +338,10 @@ The menu button opens a list with these items:
 
 ## Pairing dialogs
 
-- Android TV pairing: "Enter the code shown on your TV". Six characters, hexadecimal, upper case, monospace font. Buttons: Cancel, Pair.
+- Android TV pairing, in three states:
+  1. "Asking the TV for a code…" with a spinner, until the box confirms the request. Button: Cancel.
+  2. "Enter the code shown on your TV". Six characters, hexadecimal, upper case, monospace font. Under the field: "No code on the TV? Wake the TV, then tap Ask again." Buttons: Ask again (a new request, and the TV shows a new code), Cancel, Pair.
+  3. "Paired", "Connecting to <box>…" with a spinner. A box that has just paired can refuse the first connection for a moment, so the phone retries 3 times, 1, 2 and 3 s apart. It never asks for a second code on its own.
 - Receiver pairing: "Enter the 4-digit code shown on your TV". Numeric keyboard.
 
 ## Keyboard sheet
@@ -376,6 +379,56 @@ The receiver is not in an app store. The Mouse screen offers three ways to get i
   - Four numbered steps: install Downloader from the Play Store (or use a browser), type the address and select Go, select Install and allow unknown apps, then open the receiver and turn on the mouse service.
   - "Waiting for the box…", then "The box downloaded the receiver." after a full download.
   - The phone and the box must be on the same Wi-Fi network. The screen stays on while it is open, and the server stops when it closes.
+
+### Mouse setup
+
+When the mouse is not ready on Wi-Fi (no receiver found), the Mouse screen shows "Set up the mouse" and big choice buttons:
+
+- "Connect via Bluetooth" (Android only): no app on the box. It opens Devices at the Bluetooth section.
+- "Install auxiliary Receiver on device": opens the receiver install guide.
+
+An iPhone cannot act as a Bluetooth mouse, so iOS shows only the receiver button and says why. Copy link, Type link on the box and Try again stay below the buttons. "Download from this phone" stays in the Type link dialog.
+
+### Receiver install guide
+
+A full-screen dim with one card (the coach card style, see "First-run tutorial"). The phone serves receiver.apk while the guide is open, as in "Download from this phone", and the screen stays on. Six steps, each with a drawing of the TV screen (dark, whatever the phone theme is), the thing to select lit with an accent ring, and a hand-drawn arrow at it:
+
+1. Open Google Play on the TV.
+2. Install Downloader by AFTVnews.
+3. Type the address: the phone's address in 24 sp monospace with an accent outline, and "Waiting for the box". "Let the phone type it" uses Type link on the box. When the box downloads the file, the guide moves on to step 4 by itself.
+4. Select Install, and allow Downloader to install unknown apps if the TV asks.
+5. Turn on the mouse service, with the "Allow restricted settings" hint for a gray switch.
+6. Enter the code from the TV. The drawing shows dots, not digits. The phone looks for the receiver every 3 s from step 4. When the receiver asks for its code, the guide moves on to step 6 by itself, and the code dialog opens over it. When the mouse is ready, the guide closes.
+
+Back, step dots and Next are at the bottom. A step change slides 24 dp and fades: the old step leaves in 150 ms, the new one comes in over 300 ms after 150 ms. Under reduced motion, steps only fade.
+
+## First-run tutorial
+
+The tour runs on the first launch only. A phone that paired with a box before (an update) skips it. Help has "Show the tutorial again" and "Show the mouse guide again".
+
+| Step | Screen | Spotlight | Card |
+|---|---|---|---|
+| 1 of 3 | Remote | The box name at the top left | "Pair your TV box" |
+| 2 of 3 | Devices, boxes found | All Wi-Fi rows | "Select your TV box" |
+| 2 of 3 | Devices, no box after 3 s | "Add by IP address" | "No box found yet", with where the box shows its address |
+| Done | Remote, after the link works | None, centered card | A check that draws itself, "You are all set!", Done |
+
+The mouse walk-through runs the first time the Mouse screen shows the setup. Its card points at the choice buttons. On Android, "Connect via Bluetooth" then opens Devices with a second card on the Bluetooth button ("Make phone visible", or Allow or Turn on Bluetooth first). It ends when the Bluetooth link works or the user leaves Devices.
+
+Each card has one quiet action: "Skip tour" in the tour, "Not now" in the mouse walk-through. No card shows while a dialog or sheet is open, for example the pairing dialog.
+
+Look:
+
+- The screen dims: black `#040508` at 66 %, in 400 ms on the soft ease-out `cubic-bezier(0.215, 0.61, 0.355, 1)`.
+- The spotlight is a hole in the dim, 8 dp around the target, with a corner radius of half its height (at most 22 dp). Its edge is a 1.5 dp accent ring with a soft accent glow, and a second ring pulses out 10 dp and fades every 1.8 s. The spotlight glides to the next target on a critically damped spring.
+- The arrow is hand-drawn: a 3 dp accent line with round ends on a gentle cubic bend, a fainter 1.5 dp second line 2.7 dp beside it, a wide faint stroke under it as glow, and a head of two 12 dp wings at 28 degrees. It draws itself in 780 ms (line, then head) on `cubic-bezier(0, 0, 0.58, 1)`, then nudges 4 dp toward the target every 2.4 s.
+- The card: the surface color at 86 % (iOS: a thin material under the surface at 60 %), corner radius 20 dp, a 1.5 dp accent outline at 70 % and a 16 dp accent glow. It follows the theme and the accent, RGB too. It rises 12 dp and fades in on a spring (damping 0.72, stiffness 400) 550 ms after the step starts.
+- Text: a 12 sp step label in capitals, a 17 sp semibold title, a 15 sp body with 22 sp lines.
+- Under reduced motion, nothing moves: the arrow is drawn at once and the card fades in 200 ms.
+
+Placement (`CoachLayout` in both apps, tested): the card goes on the side of the target with more free space, 64 dp away to leave room for the arrow, at most 340 dp wide, 16 dp from the screen edges and the system bars. With less space it comes closer, but never closer than 16 dp, so it never covers the target. The arrow runs from the card edge to the target edge.
+
+Touch: the control in the spotlight takes the tap. Taps on the dimmed rest do nothing, so the user follows the step or skips it.
 
 ## Preferences
 

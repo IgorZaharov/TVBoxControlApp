@@ -6,16 +6,9 @@ import UIKit
 /// this screen is open, and the screen stays on.
 @MainActor
 struct ReceiverShareView: View {
-    private enum ShareState: Equatable {
-        case loading, ready(String), noWifi, failed
-    }
-
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accent) private var accent
-    @State private var state: ShareState = .loading
-    @State private var downloads = 0
-    @State private var attempt = 0
-    @State private var server: ReceiverShareServer?
+    @StateObject private var host = ReceiverHost()
     @State private var idleTimerWasDisabled = false
 
     var body: some View {
@@ -40,30 +33,29 @@ struct ReceiverShareView: View {
                 }
             }
         }
-        .task(id: attempt) { await prepare() }
         .onAppear {
+            host.start()
             idleTimerWasDisabled = UIApplication.shared.isIdleTimerDisabled
             UIApplication.shared.isIdleTimerDisabled = true
         }
         .onDisappear {
-            server?.stop()
-            server = nil
+            host.stop()
             UIApplication.shared.isIdleTimerDisabled = idleTimerWasDisabled
         }
     }
 
     private var addressCard: some View {
         VStack(spacing: 12) {
-            switch state {
+            switch host.state {
             case .loading:
                 ProgressView()
                 Text(L10n.t("receiver.share.loading"))
                     .foregroundColor(Theme.muted)
             case .noWifi, .failed:
-                Text(L10n.t(state == .noWifi ? "receiver.share.noWifi" : "receiver.share.failed"))
+                Text(L10n.t(host.state == .noWifi ? "receiver.share.noWifi" : "receiver.share.failed"))
                     .foregroundColor(Theme.onSurface)
                     .multilineTextAlignment(.center)
-                Button(L10n.t("action.tryAgain")) { attempt += 1 }
+                Button(L10n.t("action.tryAgain")) { host.start() }
                     .buttonStyle(.bordered)
             case .ready(let address):
                 Text(L10n.t("receiver.share.type"))
@@ -79,7 +71,7 @@ struct ReceiverShareView: View {
                     .font(.footnote)
                     .foregroundColor(Theme.muted)
                     .multilineTextAlignment(.center)
-                if downloads > 0 {
+                if host.downloads > 0 {
                     Label(L10n.t("receiver.share.done"), systemImage: "checkmark.circle.fill")
                         .font(.body.weight(.semibold))
                         .foregroundColor(Theme.ok)
@@ -115,28 +107,6 @@ struct ReceiverShareView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .background(GlassBackground(cornerRadius: 20))
-    }
-
-    private func prepare() async {
-        state = .loading
-        server?.stop()
-        server = nil
-        guard let ip = ReceiverShare.localAddress() else {
-            state = .noWifi
-            return
-        }
-        guard let data = try? await ReceiverShare.fetch() else {
-            state = .failed
-            return
-        }
-        let newServer = ReceiverShareServer(body: data)
-        newServer.onDownloaded = { downloads += 1 }
-        guard let port = await newServer.start() else {
-            state = .failed
-            return
-        }
-        server = newServer
-        state = .ready("\(ip):\(port)")
     }
 }
 

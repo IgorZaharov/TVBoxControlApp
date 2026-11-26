@@ -109,6 +109,9 @@ final class AppModel: ObservableObject {
     private var pairing: AtvPairing?
     private var receiver: ReceiverClient?
     private var reconnectAttempts = 0
+    /// True from a new pairing until the first session works. A box that has just paired can refuse the first
+    /// connection for a moment, so the app tries more often then, and never pairs again on its own.
+    private var freshlyPaired = false
     private var gyroWanted = false
 
     private var phoneName: String { UIDevice.current.name }
@@ -127,6 +130,78 @@ final class AppModel: ObservableObject {
         discovery.start()
         rebuildBoxes()
         restoreLastBox()
+        setUpTours()
+    }
+
+    // MARK: - Tours (docs/UI_SPEC.md, "First-run tutorial")
+
+    /// The first-run tour.
+    @Published private(set) var tour: Tour?
+    /// The mouse walk-through, the first time the mouse screen opens.
+    @Published private(set) var mouseTour: MouseTour?
+    /// The receiver install guide on the mouse screen.
+    @Published var mouseGuideOpen = false
+
+    private static let tourDoneKey = "tour.done"
+    private static let mouseTourDoneKey = "tour.mouseDone"
+    private var tourDefaults: UserDefaults { SharedConfig.defaults }
+
+    /// The tour starts on the first launch only. A phone that paired before (an update) skips both tours.
+    private func setUpTours() {
+        if !tourDefaults.bool(forKey: Self.mouseTourDoneKey), store.all.contains(where: { $0.receiverToken != nil }) {
+            tourDefaults.set(true, forKey: Self.mouseTourDoneKey)
+        }
+        tour = TourFlow.initial(
+            tourDone: tourDefaults.bool(forKey: Self.tourDoneKey),
+            hasPairedBox: store.all.contains { $0.fingerprint != nil }
+        )
+        if tour == nil { tourDefaults.set(true, forKey: Self.tourDoneKey) }
+    }
+
+    func finishTour() {
+        tour = nil
+        tourDefaults.set(true, forKey: Self.tourDoneKey)
+    }
+
+    /// Help, "Show the tutorial again". Help closes first.
+    func replayTour() {
+        sheet = nil
+        tour = .pair
+    }
+
+    /// Called when the mouse screen shows the setup. The walk-through runs the first time only.
+    func startMouseTourIfFirst() {
+        guard !tourDefaults.bool(forKey: Self.mouseTourDoneKey), mouseTour == nil, tour == nil else { return }
+        mouseTour = .choose
+    }
+
+    func finishMouseTour() {
+        mouseTour = nil
+        tourDefaults.set(true, forKey: Self.mouseTourDoneKey)
+    }
+
+    /// Help, "Show the mouse guide again": Help closes, then the mouse screen opens with the guide.
+    func replayMouseGuide() {
+        sheet = nil
+        Task { [weak self] in
+            // The sheet must be gone before a full screen cover can open.
+            try? await Task.sleep(nanoseconds: 450_000_000)
+            guard let self else { return }
+            guard self.currentBox != nil else {
+                self.sheet = .devices
+                return
+            }
+            self.openMouse()
+            self.mouseGuideOpen = true
+        }
+    }
+
+    /// The receiver install guide looks for the receiver while the user installs and turns it on.
+    func lookForReceiver() {
+        guard let box = currentBox, case .unavailable = mouseState else { return }
+        receiver?.close()
+        receiver = nil
+        connectReceiver(box)
     }
 
     // MARK: - Status
@@ -295,6 +370,8 @@ final class AppModel: ObservableObject {
             store.lastBoxId = box.id
             rebuildBoxes()
             sheet = nil
+            freshlyPaired = true
+            reconnectAttempts = 0
             startSession(host: host, port: box.port, fingerprint: fingerprint)
         case .failed(let message):
             pairingStage = .failed
@@ -352,6 +429,8 @@ final class AppModel: ObservableObject {
         case .connected:
             connectionState = .connected
             reconnectAttempts = 0
+            freshlyPaired = false
+            tour = TourFlow.onConnected(tour)
             // The widget lists the boxes that the app connected to, the most recent first.
             if let id = currentBox?.id {
                 store.markConnected(id)
@@ -365,7 +444,9 @@ final class AppModel: ObservableObject {
                 connectionState = .failed(L10n.t("error.session.certChanged"))
                 return
             }
-            guard reconnectAttempts < 2,
+            // After a new pairing: 3 retries, 1, 2 and 3 seconds apart. Else 2 retries, 1.5 seconds apart.
+            let maxAttempts = freshlyPaired ? 3 : 2
+            guard reconnectAttempts < maxAttempts,
                   let box = currentBox,
                   let host = box.host,
                   let fingerprint = store.box(box.id)?.fingerprint
@@ -375,8 +456,9 @@ final class AppModel: ObservableObject {
             }
             reconnectAttempts += 1
             connectionState = .connecting
+            let wait: UInt64 = freshlyPaired ? UInt64(reconnectAttempts) * 1_000_000_000 : 1_500_000_000
             Task { [weak self] in
-                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                try? await Task.sleep(nanoseconds: wait)
                 guard let self, self.session == nil, self.currentBox?.id == box.id else { return }
                 self.startSession(host: host, port: box.port, fingerprint: fingerprint)
             }

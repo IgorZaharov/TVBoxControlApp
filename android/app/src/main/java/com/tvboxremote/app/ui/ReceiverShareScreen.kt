@@ -55,7 +55,8 @@ import com.tvboxremote.app.receiver.ReceiverShare
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-private sealed interface ShareState {
+/** The state of the phone that serves receiver.apk on the Wi-Fi. */
+sealed interface ShareState {
     data object Loading : ShareState
     data class Ready(val address: String) : ShareState
     data object NoWifi : ShareState
@@ -73,43 +74,14 @@ fun ReceiverShareScreen(onClose: () -> Unit) {
         onDismissRequest = onClose,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
-        val context = LocalContext.current
         val view = LocalView.current
-        val scope = rememberCoroutineScope()
-        var state by remember { mutableStateOf<ShareState>(ShareState.Loading) }
-        var downloads by remember { mutableIntStateOf(0) }
-        var attempt by remember { mutableIntStateOf(0) }
-        var server by remember { mutableStateOf<ReceiverShare.Server?>(null) }
+        val host = rememberReceiverHost()
+        val state = host.state
+        val downloads = host.downloads
 
         DisposableEffect(view) {
             view.keepScreenOn = true
             onDispose { view.keepScreenOn = false }
-        }
-        DisposableEffect(Unit) { onDispose { server?.stop() } }
-        LaunchedEffect(attempt) {
-            state = ShareState.Loading
-            server?.stop()
-            server = null
-            val ip = ReceiverShare.localAddress()
-            if (ip == null) {
-                state = ShareState.NoWifi
-                return@LaunchedEffect
-            }
-            val file = try {
-                ReceiverShare.fetch(context)
-            } catch (e: Exception) {
-                state = ShareState.Failed
-                return@LaunchedEffect
-            }
-            val started = withContext(Dispatchers.IO) {
-                ReceiverShare.serve(scope, file) { scope.launchMain { downloads++ } }
-            }
-            if (started == null) {
-                state = ShareState.Failed
-                return@LaunchedEffect
-            }
-            server = started
-            state = ShareState.Ready("$ip:${started.port}")
         }
 
         Box(Modifier.fillMaxSize().remoteBackground()) {
@@ -144,7 +116,7 @@ fun ReceiverShareScreen(onClose: () -> Unit) {
                                     color = Palette.onSurface, fontSize = 16.sp, textAlign = TextAlign.Center,
                                 )
                                 Spacer(Modifier.height(12.dp))
-                                OutlinedButton(onClick = { attempt++ }) { Text(stringResource(R.string.action_try_again)) }
+                                OutlinedButton(onClick = host.retry) { Text(stringResource(R.string.action_try_again)) }
                             }
                             is ShareState.Ready -> {
                                 Text(stringResource(R.string.receiver_share_type), color = Palette.muted, fontSize = 15.sp)
@@ -195,6 +167,51 @@ fun ReceiverShareScreen(onClose: () -> Unit) {
             }
         }
     }
+}
+
+/** The phone serving receiver.apk on the Wi-Fi: [state], the number of [downloads], and [retry] to start again. */
+class ReceiverHost(val state: ShareState, val downloads: Int, val retry: () -> Unit)
+
+/**
+ * Gets receiver.apk and serves it on the local Wi-Fi while the caller is shown. Used by the share screen and by the
+ * receiver install guide.
+ */
+@Composable
+fun rememberReceiverHost(): ReceiverHost {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var state by remember { mutableStateOf<ShareState>(ShareState.Loading) }
+    var downloads by remember { mutableIntStateOf(0) }
+    var attempt by remember { mutableIntStateOf(0) }
+    var server by remember { mutableStateOf<ReceiverShare.Server?>(null) }
+
+    DisposableEffect(Unit) { onDispose { server?.stop() } }
+    LaunchedEffect(attempt) {
+        state = ShareState.Loading
+        server?.stop()
+        server = null
+        val ip = ReceiverShare.localAddress()
+        if (ip == null) {
+            state = ShareState.NoWifi
+            return@LaunchedEffect
+        }
+        val file = try {
+            ReceiverShare.fetch(context)
+        } catch (e: Exception) {
+            state = ShareState.Failed
+            return@LaunchedEffect
+        }
+        val started = withContext(Dispatchers.IO) {
+            ReceiverShare.serve(scope, file) { scope.launchMain { downloads++ } }
+        }
+        if (started == null) {
+            state = ShareState.Failed
+            return@LaunchedEffect
+        }
+        server = started
+        state = ShareState.Ready("$ip:${started.port}")
+    }
+    return ReceiverHost(state, downloads) { attempt++ }
 }
 
 /** One numbered step: the number in an accent circle, then the text. */

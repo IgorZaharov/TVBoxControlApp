@@ -69,7 +69,7 @@ private val HELP = listOf(
 
 /** Help: one collapsible card per section. The first section is open. */
 @Composable
-fun HelpScreen(onBack: () -> Unit) {
+fun HelpScreen(onBack: () -> Unit, onReplayTour: () -> Unit = {}, onReplayMouse: () -> Unit = {}) {
     var open by rememberSaveable { mutableStateOf(setOf(0)) }
     Column(
         Modifier.padding(horizontal = 16.dp).verticalScroll(rememberScrollState()),
@@ -80,6 +80,13 @@ fun HelpScreen(onBack: () -> Unit) {
             HelpCard(section, expanded = index in open) {
                 open = if (index in open) open - index else open + index
             }
+        }
+        // The tours run once by themselves. Here they run again on request (docs/UI_SPEC.md, "First-run tutorial").
+        androidx.compose.material3.OutlinedButton(onClick = onReplayTour, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            Text(stringResource(R.string.help_replay_tour))
+        }
+        androidx.compose.material3.OutlinedButton(onClick = onReplayMouse, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.help_replay_mouse))
         }
         Spacer(Modifier.height(32.dp))
     }

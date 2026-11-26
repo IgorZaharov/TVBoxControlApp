@@ -14,8 +14,12 @@ struct PairingSheet: View {
                 case .waitingForTV:
                     ProgressView()
                         .controlSize(.large)
-                    Text(L10n.f("pair.connecting %@", model.pairingBoxName))
+                    Text(L10n.t("pair.asking"))
+                        .foregroundColor(Theme.onSurface)
+                    Text(L10n.t("pair.askingHint"))
+                        .font(.footnote)
                         .foregroundColor(Theme.muted)
+                        .multilineTextAlignment(.center)
                 case .enterCode, .checking:
                     Text(L10n.t("pair.enterCode"))
                         .font(.title3.weight(.semibold))
@@ -38,6 +42,16 @@ struct PairingSheet: View {
                         .onSubmit { submit() }
                     if model.pairingStage == .checking {
                         ProgressView()
+                    } else {
+                        // The TV can miss the request, for example while it sleeps. A new request shows a new code.
+                        Text(L10n.t("pair.noCode"))
+                            .font(.footnote)
+                            .foregroundColor(Theme.muted)
+                            .multilineTextAlignment(.center)
+                        Button(L10n.t("pair.askAgain")) {
+                            code = ""
+                            model.retryPairing()
+                        }
                     }
                 case .failed:
                     Image(systemName: "exclamationmark.triangle.fill")

@@ -1,5 +1,20 @@
 package com.tvboxremote.app.ui
 
+import com.tvboxremote.app.ui.tutorial.MouseTour
+import com.tvboxremote.app.ui.tutorial.ReceiverGuide
+import com.tvboxremote.app.ui.tutorial.TourTargets
+import com.tvboxremote.app.ui.tutorial.coachTarget
+import com.tvboxremote.app.bluetooth.HidState
+import androidx.compose.material.icons.filled.Mouse
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.font.FontWeight
+
 import com.tvboxremote.app.LinkTyping
 import androidx.compose.material3.AlertDialog
 import com.tvboxremote.app.receiver.ReceiverDownload
@@ -69,6 +84,16 @@ import kotlin.math.abs
 @Composable
 fun MouseScreen(vm: MainViewModel, onDone: () -> Unit, onBluetooth: () -> Unit) {
     var sharing by remember { mutableStateOf(false) }
+    // The receiver install guide (docs/UI_SPEC.md, "Receiver install guide").
+    var guideOpen by remember { mutableStateOf(false) }
+    val guideRequest by vm.mouseGuideRequest.collectAsState()
+    LaunchedEffect(guideRequest) {
+        if (guideRequest) {
+            guideOpen = true
+            vm.mouseGuideShown()
+        }
+    }
+    if (guideOpen) ReceiverGuide(vm, onClose = { guideOpen = false })
     val linkTyping by vm.linkTyping.collectAsState()
     if (sharing) ReceiverShareScreen(onClose = { sharing = false })
     if (linkTyping != LinkTyping.IDLE) {
@@ -157,14 +182,22 @@ fun MouseScreen(vm: MainViewModel, onDone: () -> Unit, onBluetooth: () -> Unit) 
                         modifier = Modifier.padding(top = 8.dp, start = 24.dp, end = 24.dp),
                     )
                 }
-            } else {
-                MouseUnavailable(
-                    ui.receiver, transport,
+            } else if (transport == Transport.WIFI && (ui.receiver is ReceiverState.Failed || ui.receiver is ReceiverState.Disconnected)) {
+                // No receiver yet: the two ways to set up the mouse. The walk-through card shows the first time.
+                LaunchedEffect(Unit) { vm.startMouseTourIfFirst() }
+                MouseSetup(
+                    failure = ui.receiver as? ReceiverState.Failed,
+                    showBluetooth = ui.hid != HidState.Unavailable,
+                    onBluetooth = { vm.chooseBluetoothMouse(); onBluetooth() },
+                    onReceiver = {
+                        if (vm.mouseTour.value == MouseTour.CHOOSE) vm.finishMouseTour()
+                        guideOpen = true
+                    },
                     onRetry = vm::connectReceiver,
-                    onBluetooth = onBluetooth,
                     onTypeLink = vm::startTypeLink,
-                    onShare = { sharing = true },
                 )
+            } else {
+                MouseUnavailable(ui.receiver, transport)
             }
         }
 
@@ -196,17 +229,9 @@ private fun ClickBar(enabled: Boolean, modifier: Modifier, onClick: () -> Unit) 
     }
 }
 
+/** The mouse is not ready: what the phone waits for (a box, the receiver, its code). */
 @Composable
-private fun MouseUnavailable(
-    state: ReceiverState,
-    transport: Transport?,
-    onRetry: () -> Unit,
-    onBluetooth: () -> Unit,
-    onTypeLink: () -> Unit,
-    onShare: () -> Unit,
-) {
-    val context = LocalContext.current
-    val clipboard = LocalClipboardManager.current
+private fun MouseUnavailable(state: ReceiverState, transport: Transport?) {
     Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         val text = when {
             transport == null -> stringResource(R.string.mouse_connect_first)
@@ -218,29 +243,86 @@ private fun MouseUnavailable(
             CircularProgressIndicator(color = Palette.accent, modifier = Modifier.padding(bottom = 16.dp).size(32.dp))
         }
         Text(text, textAlign = TextAlign.Center, fontSize = 16.sp, color = Palette.onSurface)
-        if (state is ReceiverState.Failed) {
-            Text(listOfNotNull(stringResource(state.message), state.detail).joinToString("\n"), color = Palette.muted, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
-        }
-        if (transport == Transport.WIFI && (state is ReceiverState.Failed || state is ReceiverState.Disconnected)) {
-            // The receiver download: copy the fixed link, or type it into the browser address bar on the box.
-            Text(stringResource(R.string.receiver_link_hint), color = Palette.muted, fontSize = 13.sp, textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 12.dp))
-            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = {
-                    clipboard.setText(AnnotatedString(ReceiverDownload.URL))
-                    Toast.makeText(context, R.string.receiver_link_copied, Toast.LENGTH_SHORT).show()
-                }) { Text(stringResource(R.string.receiver_link_copy)) }
-                TextButton(onClick = onTypeLink) { Text(stringResource(R.string.receiver_link_type)) }
+    }
+}
+
+/**
+ * The mouse setup (docs/UI_SPEC.md, "Mouse setup"): "Connect via Bluetooth" (Android only) and "Install auxiliary
+ * Receiver on device". The receiver opens the install guide. The old ways to get the receiver stay below.
+ */
+@Composable
+private fun MouseSetup(
+    failure: ReceiverState.Failed?,
+    showBluetooth: Boolean,
+    onBluetooth: () -> Unit,
+    onReceiver: () -> Unit,
+    onRetry: () -> Unit,
+    onTypeLink: () -> Unit,
+) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(Icons.Filled.Mouse, contentDescription = null, tint = Palette.muted, modifier = Modifier.size(44.dp))
+            Text(stringResource(R.string.mouse_setup_title), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = Palette.onSurface)
+            Text(stringResource(R.string.mouse_setup_text), fontSize = 15.sp, lineHeight = 22.sp, color = Palette.muted, textAlign = TextAlign.Center)
+            if (failure != null) {
+                Text(
+                    listOfNotNull(stringResource(failure.message), failure.detail).joinToString("\n"),
+                    color = Palette.muted, fontSize = 13.sp, textAlign = TextAlign.Center,
+                )
             }
-            // The fallback: the phone serves the file on the Wi-Fi under a short address.
-            TextButton(onClick = onShare) { Text(stringResource(R.string.receiver_share_open)) }
-            Spacer(Modifier.height(8.dp))
-            OutlinedButton(onClick = onRetry) { Text(stringResource(R.string.action_try_again)) }
-            // The phone can be a Bluetooth mouse without the receiver (Android only): open the Bluetooth list.
-            Spacer(Modifier.height(8.dp))
-            TextButton(onClick = onBluetooth) { Text(stringResource(R.string.mouse_use_bluetooth)) }
         }
-        Spacer(Modifier.width(1.dp))
+        if (showBluetooth) {
+            SetupChoice(
+                Icons.Filled.Bluetooth, stringResource(R.string.mouse_choice_bt), stringResource(R.string.mouse_choice_bt_detail),
+                Modifier.coachTarget("${TourTargets.MOUSE_CHOICES}/bluetooth"), onBluetooth,
+            )
+        }
+        SetupChoice(
+            Icons.Filled.Download, stringResource(R.string.mouse_choice_rx), stringResource(R.string.mouse_choice_rx_detail),
+            Modifier.coachTarget("${TourTargets.MOUSE_CHOICES}/receiver"), onReceiver,
+        )
+        // The other ways to get the receiver: copy the fixed link, or let the phone type it on the box.
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            TextButton(onClick = {
+                clipboard.setText(AnnotatedString(ReceiverDownload.URL))
+                Toast.makeText(context, R.string.receiver_link_copied, Toast.LENGTH_SHORT).show()
+            }) { Text(stringResource(R.string.receiver_link_copy)) }
+            TextButton(onClick = onTypeLink) { Text(stringResource(R.string.receiver_link_type)) }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            TextButton(onClick = onRetry) { Text(stringResource(R.string.action_try_again)) }
+        }
+    }
+}
+
+/** One big setup button: an accent icon, the title and one line on what it means. */
+@Composable
+private fun SetupChoice(icon: ImageVector, title: String, detail: String, modifier: Modifier, onClick: () -> Unit) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .heightIn(min = 76.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Palette.onSurface.copy(alpha = 0.06f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Icon(icon, contentDescription = null, tint = Palette.accent, modifier = Modifier.size(28.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Palette.onSurface)
+            Text(detail, fontSize = 13.sp, lineHeight = 18.sp, color = Palette.muted)
+        }
     }
 }
 

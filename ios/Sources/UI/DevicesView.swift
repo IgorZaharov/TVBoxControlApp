@@ -8,6 +8,8 @@ struct DevicesView: View {
     @State private var showManualEntry = false
     @State private var manualAddress = ""
     @State private var showInvalidAddress = false
+    /// The tour points at "Add by IP address" once the Wi-Fi list stayed empty for a moment.
+    @State private var emptyForLong = false
 
     var body: some View {
         NavigationStack {
@@ -31,6 +33,7 @@ struct DevicesView: View {
                                 state: model.connectionState
                             )
                         }
+                        .coachTarget("\(TourTargets.wifiRows)/\(box.id)")
                         .listRowBackground(KnownRowBackground(known: box.isKnown))
                         .swipeActions {
                             Button(role: .destructive) {
@@ -60,6 +63,7 @@ struct DevicesView: View {
                     } label: {
                         Label(L10n.t("devices.addByIp"), systemImage: "plus.circle")
                     }
+                    .coachTarget(TourTargets.addByIp)
                     .listRowBackground(Theme.surface)
                     if model.currentBox != nil {
                         Button(role: .destructive) {
@@ -75,6 +79,14 @@ struct DevicesView: View {
             }
             .scrollContentBackground(.hidden)
             .background(RemoteBackground())
+            // The tour cards of Devices (docs/UI_SPEC.md, "First-run tutorial").
+            .coachOverlay(step: tourStep) { step in TourCard(step: step).environmentObject(model) }
+            .task(id: model.boxes.isEmpty) {
+                emptyForLong = false
+                guard model.boxes.isEmpty else { return }
+                try? await Task.sleep(nanoseconds: UInt64(TourFlow.emptyListWait * 1_000_000_000))
+                if !Task.isCancelled { emptyForLong = true }
+            }
             .navigationTitle(L10n.t("devices.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -102,6 +114,16 @@ struct DevicesView: View {
             }
             .modelAlert(model)
         }
+    }
+}
+
+extension DevicesView {
+    private var tourStep: TourStep? {
+        TourFlow.step(
+            tour: model.tour, mouseTour: model.mouseTour, screen: model.sheet == .devices ? .devices : .other,
+            wifiBoxes: model.boxes.count, emptyForLong: emptyForLong,
+            dialogOpen: showManualEntry || showInvalidAddress || model.alertMessage != nil
+        )
     }
 }
 

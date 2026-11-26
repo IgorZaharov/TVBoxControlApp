@@ -3,6 +3,7 @@ package com.tvboxremote.app
 import kotlinx.coroutines.delay
 import com.tvboxremote.app.receiver.ReceiverDownload
 import android.annotation.SuppressLint
+import android.util.Log
 import android.app.Application
 import android.bluetooth.BluetoothDevice
 import android.os.Build
@@ -58,6 +59,11 @@ import javax.net.ssl.SSLException
 import javax.net.ssl.SSLHandshakeException
 import kotlin.math.abs
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import com.tvboxremote.app.ui.tutorial.MouseTour
+import com.tvboxremote.app.ui.tutorial.Tour
+import com.tvboxremote.app.ui.tutorial.TourFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
@@ -67,6 +73,15 @@ private val NO_ERROR = Throwable("none")
 
 /** Automatic reconnects after a lost Wi-Fi link, before the app shows "Connection lost". */
 private const val MAX_RECONNECTS = 3
+
+private const val TAG = "TVBoxRemote"
+
+/**
+ * The waits before each retry of the control connection right after a new pairing. A box that has just paired can
+ * refuse the first connection for a moment. Without retries, the phone started a second pairing, and the TV showed no
+ * code for it.
+ */
+private val FRESH_PAIR_RETRY_MS = listOf(1_000L, 2_000L, 3_000L)
 
 /** How long "Type link on the box" waits for the box keyboard. */
 private const val LINK_WAIT_MS = 60_000L
@@ -91,9 +106,18 @@ sealed interface CodeRequest {
     data class Receiver(val boxName: String, val wrongCode: Boolean) : CodeRequest
 }
 
+/** What the pairing dialog shows while no code is asked. */
+enum class PairingStatus {
+    /** The phone waits until the box confirms and shows the code on the TV. */
+    ASKING,
+    /** The code is accepted. The phone opens the control connection, with retries. */
+    CONNECTING,
+}
+
 data class UiState(
     val link: Link = Link.None,
     val codeRequest: CodeRequest? = null,
+    val pairingStatus: PairingStatus? = null,
     val volume: VolumeState? = null,
     val receiver: ReceiverState = ReceiverState.Disconnected,
     val hid: HidState = HidState.Idle,
@@ -146,9 +170,69 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val phoneName = "${Build.MANUFACTURER} ${Build.MODEL}".trim()
 
+    private val _tour = MutableStateFlow<Tour?>(null)
+    /** The first-run tour (docs/UI_SPEC.md, "First-run tutorial"). */
+    val tour: StateFlow<Tour?> = _tour.asStateFlow()
+
+    private val _mouseTour = MutableStateFlow<MouseTour?>(null)
+    /** The mouse walk-through, the first time the mouse screen opens. */
+    val mouseTour: StateFlow<MouseTour?> = _mouseTour.asStateFlow()
+
+    private val _mouseGuideRequest = MutableStateFlow(false)
+    /** Help asked to show the receiver install guide again. The mouse screen opens it. */
+    val mouseGuideRequest: StateFlow<Boolean> = _mouseGuideRequest.asStateFlow()
+
+    fun finishTour() {
+        _tour.value = null
+        store.tourDone = true
+    }
+
+    /** Help, "Show the tutorial again". */
+    fun replayTour() {
+        _tour.value = Tour.PAIR
+    }
+
+    /** Called when the mouse screen shows the setup choices. The walk-through runs the first time only. */
+    fun startMouseTourIfFirst() {
+        if (!store.mouseTourDone && _mouseTour.value == null && _tour.value == null) _mouseTour.value = MouseTour.CHOOSE
+    }
+
+    /** "Connect via Bluetooth" on the mouse screen. During the walk-through, Devices then points at Bluetooth. */
+    fun chooseBluetoothMouse() {
+        if (_mouseTour.value == MouseTour.CHOOSE) _mouseTour.value = MouseTour.BLUETOOTH
+    }
+
+    fun finishMouseTour() {
+        _mouseTour.value = null
+        store.mouseTourDone = true
+    }
+
+    /** Help, "Show the mouse guide again". */
+    fun replayMouseGuide() {
+        _mouseGuideRequest.value = true
+    }
+
+    fun mouseGuideShown() {
+        _mouseGuideRequest.value = false
+    }
+
     init {
         LiveLinks.appActive = true
         discovery.setManualBoxes(loadManualBoxes())
+        // A phone that used the receiver before (an update) skips the mouse walk-through.
+        if (!store.mouseTourDone && store.hasPairedReceiver) store.mouseTourDone = true
+        _tour.value = TourFlow.initial(store.tourDone, store.hasPairedBox)
+        if (_tour.value == null && !store.tourDone) store.tourDone = true
+        viewModelScope.launch {
+            _ui.map { it.link is Link.Connected }.distinctUntilChanged().collect { connected ->
+                if (connected) _tour.value = TourFlow.onConnected(_tour.value)
+            }
+        }
+        viewModelScope.launch {
+            _ui.map { it.hid is HidState.Connected }.distinctUntilChanged().collect { connected ->
+                if (connected && _mouseTour.value == MouseTour.BLUETOOTH) finishMouseTour()
+            }
+        }
         viewModelScope.launch {
             var previous: HidState = hid.state.value
             hid.state.collect { state ->
@@ -261,32 +345,23 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val identity = ClientIdentity.get(getApplication())
                 var fingerprint = store.fingerprint(box.host)
-                if (fingerprint == null) {
-                    fingerprint = pair(identity, box) ?: run {
-                        _ui.update { it.copy(link = Link.None, connectedBox = null) }
-                        return@launch
+                var s: AtvRemoteSession? = null
+                if (fingerprint != null) {
+                    s = openAccepted(identity, box, fingerprint)
+                    if (s == null) {
+                        if (quiet) throw IOException("The box refused the phone")
+                        Log.i(TAG, "The box refused the stored pairing. Pairing again.")
                     }
-                }
-                // If the box no longer knows this phone, it rejects the client certificate:
-                // during the handshake (TLS 1.2) or right after it (TLS 1.3).
-                var s: AtvRemoteSession? = try {
-                    openSession(identity, box, fingerprint)
-                } catch (e: SSLHandshakeException) {
-                    null
-                }
-                if (s != null && startupFailure(s) is SSLException) {
-                    s.close()
-                    s = null
                 }
                 if (s == null) {
-                    if (quiet) throw IOException("The box refused the phone")
-                    // The old pin stays until a new pairing succeeds.
+                    // A first pairing, or the box no longer knows this phone. The old pin stays until a new pairing succeeds.
                     fingerprint = pair(identity, box) ?: run {
-                        _ui.update { it.copy(link = Link.None, connectedBox = null) }
+                        _ui.update { it.copy(link = Link.None, connectedBox = null, pairingStatus = null) }
                         return@launch
                     }
-                    s = openSession(identity, box, fingerprint)
+                    s = openAfterPairing(identity, box, fingerprint)
                 }
+                _ui.update { it.copy(pairingStatus = null) }
                 session = s
                 LiveLinks.wifi = s
                 store.lastDevice = "wifi:${box.host}:${box.port}:${box.name}"
@@ -320,15 +395,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     }
                 }
             } catch (e: CertificateMismatchException) {
-                _ui.update { it.copy(link = Link.None, connectedBox = null) }
+                _ui.update { it.copy(link = Link.None, connectedBox = null, pairingStatus = null) }
                 notify(str(R.string.msg_new_certificate, box.name))
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: PairingException) {
-                _ui.update { it.copy(link = Link.None, connectedBox = null, codeRequest = null) }
+                _ui.update { it.copy(link = Link.None, connectedBox = null, codeRequest = null, pairingStatus = null) }
                 notify(pairingMessage(e))
             } catch (e: Exception) {
-                _ui.update { it.copy(link = Link.None, connectedBox = null, codeRequest = null) }
+                _ui.update { it.copy(link = Link.None, connectedBox = null, codeRequest = null, pairingStatus = null) }
                 val detail = e.message ?: e.javaClass.simpleName
                 when {
                     attempt > 0 -> notify(str(R.string.msg_connection_lost_reason, box.name, detail))
@@ -361,12 +436,88 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 .takeIf { it !== NO_ERROR }
         }
 
+    /**
+     * Opens the control session and waits until the box accepts it. Returns null if the box refuses the client
+     * certificate: during the handshake (TLS 1.2) or right after it (TLS 1.3).
+     */
+    private suspend fun openAccepted(identity: ClientIdentity, box: TvBox, fingerprint: String): AtvRemoteSession? {
+        val s = try {
+            openSession(identity, box, fingerprint)
+        } catch (e: SSLHandshakeException) {
+            Log.i(TAG, "Handshake refused: ${e.message}")
+            return null
+        }
+        val failure = startupFailure(s)
+        if (failure is SSLException) {
+            Log.i(TAG, "Session refused after the handshake: ${failure.message}")
+            s.close()
+            return null
+        }
+        return s
+    }
+
+    /**
+     * Opens the control session right after a new pairing. The box can refuse the first connection for a moment, so
+     * the phone tries again a few times. It never starts a second pairing here: the TV would show no code for it.
+     */
+    private suspend fun openAfterPairing(identity: ClientIdentity, box: TvBox, fingerprint: String): AtvRemoteSession {
+        _ui.update { it.copy(pairingStatus = PairingStatus.CONNECTING) }
+        var last: IOException? = null
+        suspend fun attempt(): AtvRemoteSession? = try {
+            openAccepted(identity, box, fingerprint)
+        } catch (e: CertificateMismatchException) {
+            throw e
+        } catch (e: IOException) {
+            // A reset or a refused port right after pairing: also a box that is not ready yet.
+            Log.i(TAG, "Connection after pairing failed: ${e.message}")
+            last = e
+            null
+        }
+        attempt()?.let { return it }
+        for ((index, wait) in FRESH_PAIR_RETRY_MS.withIndex()) {
+            Log.i(TAG, "The box refused the new pairing. Retry ${index + 1} in $wait ms.")
+            delay(wait)
+            attempt()?.let { return it }
+        }
+        throw last ?: IOException("The box did not accept the phone after pairing")
+    }
+
+    /** Set by "Ask again" in the code dialog: the pairing starts again, and the TV shows a new code. */
+    @Volatile private var askAgain = false
+
     private suspend fun pair(identity: ClientIdentity, box: TvBox): String? {
-        val fingerprint = AtvPairing(identity, box.host, phoneName).run { wrongCode ->
-            askCode(CodeRequest.Atv(box.name, wrongCode))
-        } ?: return null
-        store.setFingerprint(box.host, fingerprint)
-        return fingerprint
+        while (true) {
+            askAgain = false
+            _ui.update { it.copy(pairingStatus = PairingStatus.ASKING) }
+            Log.i(TAG, "Pairing with ${box.host}")
+            val fingerprint = AtvPairing(identity, box.host, phoneName).run { wrongCode ->
+                Log.i(TAG, "The box shows the code")
+                askCode(CodeRequest.Atv(box.name, wrongCode))
+            }
+            if (fingerprint == null) {
+                if (askAgain) continue
+                Log.i(TAG, "Pairing cancelled")
+                _ui.update { it.copy(pairingStatus = null) }
+                return null
+            }
+            Log.i(TAG, "Paired")
+            store.setFingerprint(box.host, fingerprint)
+            return fingerprint
+        }
+    }
+
+    /** "Ask again" in the code dialog: closes this pairing and starts a new one, so the TV shows a new code. */
+    fun askCodeAgain() {
+        if (_ui.value.codeRequest !is CodeRequest.Atv) return
+        askAgain = true
+        pendingCode?.complete(null)
+    }
+
+    /** Cancel in the pairing dialog while the phone waits for the TV. */
+    fun cancelPairing() {
+        if (_ui.value.pairingStatus == null) return
+        sessionJob?.cancel()
+        _ui.update { it.copy(link = Link.None, connectedBox = null, codeRequest = null, pairingStatus = null) }
     }
 
     private suspend fun askCode(request: CodeRequest): String? {

@@ -1,5 +1,8 @@
 package com.tvboxremote.app.ui
 
+import com.tvboxremote.app.ui.tutorial.TourTargets
+import com.tvboxremote.app.ui.tutorial.coachTarget
+
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -164,6 +167,7 @@ private fun TopBar(state: UiState, onOpenDevices: () -> Unit, onMenu: (MenuItem)
         Row(
             modifier = Modifier
                 .weight(1f)
+                .coachTarget(TourTargets.DEVICES)
                 .clip(RoundedCornerShape(12.dp))
                 .clickable(onClick = onOpenDevices)
                 .padding(vertical = 8.dp, horizontal = 4.dp),

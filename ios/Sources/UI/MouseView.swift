@@ -67,6 +67,16 @@ struct MouseView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(RemoteBackground())
+        .coachOverlay(step: tourStep) { step in TourCard(step: step).environmentObject(model) }
+        .background(
+            // A second presenter for the receiver install guide, so it does not share one view with the share cover.
+            Color.clear
+                .fullScreenCover(isPresented: $model.mouseGuideOpen) {
+                    ReceiverGuideView()
+                        .environmentObject(model)
+                        .themed(prefs: prefs, accent: accent)
+                }
+        )
         .sheet(isPresented: Binding(
             get: { model.linkTyping != .idle },
             set: { if !$0 { model.closeTypeLink() } }
@@ -126,40 +136,80 @@ struct MouseView: View {
                 .font(.footnote)
                 .foregroundColor(Theme.muted)
         case .unavailable(let message):
-            VStack(spacing: 14) {
-                Image(systemName: "cursorarrow.slash")
-                    .font(.system(size: 34))
-                    .foregroundColor(Theme.muted)
-                Text(message)
-                    .font(.callout)
-                    .foregroundColor(Theme.onSurface)
-                    .multilineTextAlignment(.center)
-                // The receiver download: copy the fixed link, or type it into the browser address bar on the box.
-                Text(L10n.t("receiver.link.hint"))
-                    .font(.footnote)
-                    .foregroundColor(Theme.muted)
-                    .multilineTextAlignment(.center)
-                HStack(spacing: 12) {
-                    Button(L10n.t("receiver.link.copy")) {
-                        UIPasteboard.general.string = ReceiverDownload.url
-                        linkCopied = true
-                    }
-                    Button(L10n.t("receiver.link.type")) { model.startTypeLink() }
-                }
-                .font(.footnote)
-                // The fallback: the phone serves the file on the Wi-Fi under a short address.
-                Button(L10n.t("receiver.share.open")) { showShare = true }
-                    .font(.footnote)
-                if linkCopied {
-                    Text(L10n.t("receiver.link.copied"))
+            // No receiver yet: the mouse setup (docs/UI_SPEC.md, "Mouse setup"). An iPhone has only the receiver way.
+            ScrollView {
+                VStack(spacing: 14) {
+                    Image(systemName: "computermouse")
+                        .font(.system(size: 40))
+                        .foregroundColor(Theme.muted)
+                    Text(L10n.t("mouse.setup.title"))
+                        .font(.title3.weight(.semibold))
+                        .foregroundColor(Theme.onSurface)
+                    Text(L10n.t("mouse.setup.textIos"))
+                        .font(.callout)
+                        .foregroundColor(Theme.muted)
+                        .multilineTextAlignment(.center)
+                    Text(message)
                         .font(.footnote)
                         .foregroundColor(Theme.muted)
+                        .multilineTextAlignment(.center)
+                    Text(L10n.t("mouse.setup.noBluetooth"))
+                        .font(.footnote)
+                        .foregroundColor(Theme.muted)
+                        .multilineTextAlignment(.center)
+                    Button {
+                        if model.mouseTour == .choose { model.finishMouseTour() }
+                        model.mouseGuideOpen = true
+                    } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: "arrow.down.to.line")
+                                .font(.system(size: 24, weight: .semibold))
+                                .foregroundColor(accent.accent)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L10n.t("mouse.choice.receiver"))
+                                    .font(.body.weight(.semibold))
+                                    .foregroundColor(Theme.onSurface)
+                                Text(L10n.t("mouse.choice.receiverDetail"))
+                                    .font(.footnote)
+                                    .foregroundColor(Theme.muted)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .multilineTextAlignment(.leading)
+                        .padding(.horizontal, 16)
+                        .frame(maxWidth: .infinity, minHeight: 76)
+                        .background(RoundedRectangle(cornerRadius: 20).fill(Theme.onSurface.opacity(0.06)))
+                    }
+                    .coachTarget("\(TourTargets.mouseChoices)/receiver")
+                    // The other ways to get the receiver: copy the fixed link, or let the phone type it on the box.
+                    HStack(spacing: 12) {
+                        Button(L10n.t("receiver.link.copy")) {
+                            UIPasteboard.general.string = ReceiverDownload.url
+                            linkCopied = true
+                        }
+                        Button(L10n.t("receiver.link.type")) { model.startTypeLink() }
+                    }
+                    .font(.footnote)
+                    if linkCopied {
+                        Text(L10n.t("receiver.link.copied"))
+                            .font(.footnote)
+                            .foregroundColor(Theme.muted)
+                    }
+                    Button(L10n.t("action.tryAgain")) { model.retryMouse() }
+                        .font(.footnote)
                 }
-                Button(L10n.t("action.tryAgain")) { model.retryMouse() }
-                    .buttonStyle(.bordered)
+                .padding(20)
             }
-            .padding(24)
+            .onAppear { model.startMouseTourIfFirst() }
         }
+    }
+
+    /// The walk-through card over the mouse screen, the first time the setup shows.
+    private var tourStep: TourStep? {
+        TourFlow.step(
+            tour: model.tour, mouseTour: model.mouseTour, screen: .mouse, wifiBoxes: 0, emptyForLong: false,
+            dialogOpen: model.receiverPairingVisible || model.linkTyping != .idle || model.mouseGuideOpen || showShare
+        )
     }
 }
 

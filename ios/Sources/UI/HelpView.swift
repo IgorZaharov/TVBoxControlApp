@@ -3,6 +3,7 @@ import SwiftUI
 @MainActor
 struct HelpView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var model: AppModel
 
     /// The sections, as Localizable.strings keys: "help.<id>.title" and "help.<id>.1" ... "help.<id>.<count>".
     private struct HelpSection: Identifiable {
@@ -30,6 +31,15 @@ struct HelpView: View {
                             title: L10n.t("help.\(section.id).title"),
                             paragraphs: (1...section.count).map { L10n.t("help.\(section.id).\($0)") }
                         )
+                    }
+                    // The tours run once by themselves. Here they run again on request.
+                    VStack(spacing: 12) {
+                        Button(L10n.t("help.replayTour")) { model.replayTour() }
+                            .buttonStyle(.bordered)
+                            .frame(maxWidth: .infinity)
+                        Button(L10n.t("help.replayMouse")) { model.replayMouseGuide() }
+                            .buttonStyle(.bordered)
+                            .frame(maxWidth: .infinity)
                     }
                 }
                 .padding(20)

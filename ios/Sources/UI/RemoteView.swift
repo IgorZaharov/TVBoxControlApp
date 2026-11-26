@@ -62,6 +62,8 @@ struct RemoteView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(RemoteBackground())
+        // The tour cards of the remote screen (docs/UI_SPEC.md, "First-run tutorial").
+        .coachOverlay(step: tourStep) { step in TourCard(step: step).environmentObject(model) }
         .environment(\.tiltModel, tilt)
         .sheet(item: $model.sheet) { sheet in
             sheetContent(sheet)
@@ -96,6 +98,15 @@ struct RemoteView: View {
         .onChange(of: model.showController) { _ in updateTilt() }
         .onChange(of: model.sheet) { _ in updateTilt() }
         .onChange(of: reduceMotion) { _ in updateTilt() }
+    }
+
+    /// The tour step over the remote: only while no sheet or cover hides it.
+    private var tourStep: TourStep? {
+        let visible = model.sheet == nil && !model.showMouse && !model.showController
+        return TourFlow.step(
+            tour: model.tour, mouseTour: model.mouseTour, screen: visible ? .remote : .other,
+            wifiBoxes: model.boxes.count, emptyForLong: false, dialogOpen: model.alertMessage != nil
+        )
     }
 
     /// Space the signal line keeps clear above and below it.
@@ -147,6 +158,7 @@ struct RemoteView: View {
                 .padding(.vertical, 6)
             }
             .accessibilityLabel(L10n.f("remote.devicesLabel %@", model.statusTitle))
+            .coachTarget(TourTargets.devices)
 
             Spacer()
 

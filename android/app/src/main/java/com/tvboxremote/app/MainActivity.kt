@@ -43,13 +43,20 @@ import com.tvboxremote.app.ui.DevicesScreen
 import com.tvboxremote.app.ui.Haptics
 import com.tvboxremote.app.ui.HelpScreen
 import com.tvboxremote.app.ui.KeyboardSheet
+import com.tvboxremote.app.ui.PairingStatusDialog
 import com.tvboxremote.app.ui.MediaKeysSheet
 import com.tvboxremote.app.ui.MenuItem
 import com.tvboxremote.app.ui.MouseScreen
 import com.tvboxremote.app.ui.Palette
 import com.tvboxremote.app.ui.PreferencesScreen
 import com.tvboxremote.app.ui.RemoteScreen
+import androidx.compose.runtime.CompositionLocalProvider
 import com.tvboxremote.app.ui.RemoteTheme
+import com.tvboxremote.app.ui.tutorial.CoachTargets
+import com.tvboxremote.app.ui.tutorial.LocalCoachTargets
+import com.tvboxremote.app.ui.tutorial.MouseTour
+import com.tvboxremote.app.ui.tutorial.TourLayer
+import com.tvboxremote.app.ui.tutorial.TourScreen
 
 enum class Screen(val fullScreen: Boolean = false, val landscape: Boolean = false) {
     REMOTE(fullScreen = true),
@@ -161,6 +168,15 @@ private fun App(vm: MainViewModel) {
         if (!vm.press(k)) screen = Screen.DEVICES
     }
 
+    val tour by vm.tour.collectAsState()
+    val mouseTour by vm.mouseTour.collectAsState()
+    val wifiBoxes by vm.discovery.boxes.collectAsState()
+    val coachTargets = remember { CoachTargets() }
+    // The Bluetooth hint of the mouse walk-through ends when the user leaves Devices.
+    LaunchedEffect(screen) { if (mouseTour == MouseTour.BLUETOOTH && screen != Screen.DEVICES) vm.finishMouseTour() }
+
+    CompositionLocalProvider(LocalCoachTargets provides coachTargets) {
+    Box(Modifier.fillMaxSize()) {
     // Every screen sits on the textured background (docs/UI_SPEC.md, "Background texture").
     Scaffold(
         modifier = Modifier.remoteBackground(),
@@ -190,7 +206,7 @@ private fun App(vm: MainViewModel) {
                         }
                     },
                 )
-                Screen.DEVICES -> DevicesScreen(vm, onBack = { screen = Screen.REMOTE })
+                Screen.DEVICES -> DevicesScreen(vm, onBack = { screen = Screen.REMOTE }, scrollToBluetooth = mouseTour == MouseTour.BLUETOOTH)
                 Screen.MOUSE -> MouseScreen(vm, onDone = { screen = Screen.REMOTE }, onBluetooth = { screen = Screen.DEVICES })
                 Screen.PREFERENCES -> PreferencesScreen(
                     prefs, vm::updatePreferences,
@@ -213,10 +229,36 @@ private fun App(vm: MainViewModel) {
                     onDone = { vm.saveControllerLayout(it); screen = Screen.PREFERENCES },
                     onCancel = { screen = Screen.PREFERENCES },
                 )
-                Screen.HELP -> HelpScreen(onBack = { screen = Screen.REMOTE })
+                Screen.HELP -> HelpScreen(
+                    onBack = { screen = Screen.REMOTE },
+                    onReplayTour = { vm.replayTour(); screen = Screen.REMOTE },
+                    onReplayMouse = {
+                        vm.replayMouseGuide()
+                        screen = if (vm.isConnected) Screen.MOUSE else Screen.DEVICES
+                    },
+                )
                 Screen.ABOUT -> AboutScreen(onBack = { screen = Screen.REMOTE })
             }
         }
+    }
+
+    // The tour cards lie over every screen (docs/UI_SPEC.md, "First-run tutorial").
+    TourLayer(
+        tour = tour,
+        mouseTour = mouseTour,
+        screen = when (screen) {
+            Screen.REMOTE -> TourScreen.REMOTE
+            Screen.DEVICES -> TourScreen.DEVICES
+            Screen.MOUSE -> TourScreen.MOUSE
+            else -> TourScreen.OTHER
+        },
+        wifiBoxes = wifiBoxes.size,
+        dialogOpen = ui.codeRequest != null || ui.pairingStatus != null || keyboardOpen || mediaOpen,
+        boxName = (ui.link as? Link.Connected)?.name.orEmpty(),
+        onFinishTour = vm::finishTour,
+        onFinishMouseTour = vm::finishMouseTour,
+    )
+    }
     }
 
     if (keyboardOpen) {
@@ -230,5 +272,11 @@ private fun App(vm: MainViewModel) {
     if (mediaOpen) {
         MediaKeysSheet(onKey = ::key, onDismiss = { mediaOpen = false })
     }
-    ui.codeRequest?.let { request -> CodeDialog(request, onSubmit = vm::submitCode) }
+    val codeRequest = ui.codeRequest
+    val pairingStatus = ui.pairingStatus
+    if (codeRequest != null) {
+        CodeDialog(codeRequest, onSubmit = vm::submitCode, onAskAgain = vm::askCodeAgain)
+    } else if (pairingStatus != null) {
+        PairingStatusDialog(pairingStatus, ui.connectedBox?.name.orEmpty(), onCancel = vm::cancelPairing)
+    }
 }

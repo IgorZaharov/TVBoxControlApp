@@ -69,6 +69,22 @@ class AppStore(context: Context) {
         if (token == null) remove("rt_$host") else putString("rt_$host", token)
     }.apply()
 
+    /** The first-run tour is done or skipped (docs/UI_SPEC.md, "First-run tutorial"). */
+    var tourDone: Boolean
+        get() = prefs.getBoolean("tour_done", false)
+        set(value) = prefs.edit().putBoolean("tour_done", value).apply()
+
+    /** The mouse walk-through is done or skipped. */
+    var mouseTourDone: Boolean
+        get() = prefs.getBoolean("mouse_tour_done", false)
+        set(value) = prefs.edit().putBoolean("mouse_tour_done", value).apply()
+
+    /** True if the phone paired with any Wi-Fi box before. */
+    val hasPairedBox: Boolean get() = prefs.all.keys.any { it.startsWith("fp_") }
+
+    /** True if the phone paired with any box receiver before. */
+    val hasPairedReceiver: Boolean get() = prefs.all.keys.any { it.startsWith("rt_") }
+
     /** The last box. Format: "wifi:<host>:<port>:<name>" or "bt:<address>". */
     var lastDevice: String?
         get() = prefs.getString("last_device", null)
